@@ -388,7 +388,7 @@ printf("dfz=%u\n",
         // uint16_t last_x, // TODO: unused in C version?
         uint8_t bitpacked = 0u;
 
-        uint8_t pixelsRemainingToPack = pixels_per_byte;
+        uint8_t pixels_remaining_to_pack = pixels_per_byte;
         for (uint8_t x = 0u; x < width; x++) {
             // Spec:
             // Pixels are always packed into scanlines with no wasted bits between pixels.
@@ -403,9 +403,11 @@ printf("dfz=%u\n",
             bitpacked |= next_pixel_index;
 
             // Write out packed bits if this is the last bit in the byte
-            if (--pixelsRemainingToPack == 0u) {
+            if (--pixels_remaining_to_pack == 0u) {
                 *p_zlib_pixel_rows++ = bitpacked;
-                pixelsRemainingToPack = pixels_per_byte;
+                // Don't reset the pixels to pack counter if this is the end of the pixel row
+                if (x != (width - 1u))
+                    pixels_remaining_to_pack = pixels_per_byte;
             }
             // Rotate bits upward (for 8bpp this is don't care since it's all replaced next iteration)
             bitpacked = (bitpacked << bpp) & 0xFF;
@@ -415,7 +417,7 @@ printf("dfz=%u\n",
         // If there trailing bits that need to be flushed then write them out
         // (i.e, image width isn't a multiple of 8 and so a row won't end on full bit)
         // Doesn't apply for 8bpp since that always writes a full byte per pixel
-        if ((bpp != 8) && (pixelsRemainingToPack != 0u)) {
+        if ((bpp != 8) && (pixels_remaining_to_pack != 0u)) {
             // Spec:
             // Scanlines always begin on byte boundaries.
             // When pixels have fewer than 8 bits and the scanline width
@@ -423,7 +425,7 @@ printf("dfz=%u\n",
             // The contents of these wasted bits are unspecified.
 
             // Upshift so that unused bits are in low order bits
-            bitpacked = (bitpacked << (pixelsRemainingToPack * bpp));
+            bitpacked = (bitpacked << (pixels_remaining_to_pack * bpp));
             *p_zlib_pixel_rows++ = bitpacked & 0xFF;
         }
 
@@ -433,9 +435,9 @@ printf("a_rng=%x /sz=%x\n",
 
         adler_crc_update(p_zlib_adler_start, (p_zlib_pixel_rows - p_zlib_adler_start)); // Length calc is not +1 since pointer is already at byte after end of adler range
 
-printf("ad a=%x,b=%x\n",
-       (uint16_t)zlib_adler_a,
-       (uint16_t)zlib_adler_b);
+// printf("ad a=%x,b=%x\n",
+//        (uint16_t)zlib_adler_a,
+//        (uint16_t)zlib_adler_b);
     }
     // Write zlib Adler crc
     p_zlib_pixel_rows = write_u16_be(p_zlib_pixel_rows, zlib_adler_b);
@@ -505,8 +507,9 @@ uint16_t png_indexed_encode(void) {
     // PNG Indexed Color Pixel Data (in 8192 byte IDAT Chunks)
     // p_pngbuf = png_write_chunk(p_pngbuf, "IDAT", zlibPixelRows, zlibPixelRows_sz);
     // Don't actually write the pixel data since it's already been assembled in place
-// printf("\npchk=%x\n", (uint16_t)p_pngbuf);    
+printf("\npchk=%x, %u\n", (uint16_t)p_pngbuf, (uint16_t)zlib_packed_size);
     p_pngbuf = png_write_chunk(p_pngbuf, "IDAT", NO_DATA_COPY, zlib_packed_size);
+printf("\npchk=%x\n", (uint16_t)p_pngbuf);
 
     // PNG End of data
     p_pngbuf = png_write_chunk(p_pngbuf, "IEND", NO_DATA_COPY, 0);

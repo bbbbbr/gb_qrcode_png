@@ -7,7 +7,9 @@
 #include "common.h"
 #include "png_indexed.h"
 
+#define OUT_BPP_1  1u
 #define OUT_BPP_2  2u
+#define OUT_BPP_4  4u
 #define OUT_BPP_8  8u
 // #define RGB888_SZ  3u  // 3 bytes
 
@@ -50,8 +52,8 @@ void main(void)
 
     uint16_t png_buf_sz = png_indexed_init(IMG_8X8_4_COLORS_8BPP_ENCODED_WIDTH,
                                            IMG_8X8_4_COLORS_8BPP_ENCODED_HEIGHT, 
-                                           OUT_BPP_8,     // Current build works, to match  test_8x8_indexed_nocomp_2bpp-encoded.png use 8BPP
-                                           // OUT_BPP_2,
+                                           // OUT_BPP_8,     // Current build works, to match  test_8x8_indexed_nocomp_2bpp-encoded.png use 8BPP
+                                           OUT_BPP_2,        // Output passes pngcheck and imports to GIMP ok
                                            ARRAY_LEN(img_8x8_4_colors_8bpp_encoded_pal));
 
     // Put the output buffer in Cart SRAM, no need to allocate it
