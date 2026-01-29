@@ -375,6 +375,8 @@ printf("dfz=%u\n",
 
     // Write out the scanline pixel index rows
     for (uint8_t y = 0u; y < height; y++) {
+
+        // TODO: OPTIMIZE: discard deflate block per pixel row and put everything in a single block since output it will always be less than block limit (65,535 bytes)
         // Deflate Header
         *p_zlib_pixel_rows++ = (y == (height - 1)) ? DEFLATE_HEADER_FINAL_YES :  DEFLATE_HEADER_FINAL_NO;
         // 
