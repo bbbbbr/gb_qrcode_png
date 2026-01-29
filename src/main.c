@@ -37,14 +37,44 @@ const uint8_t img_8x8_4_colors_8bpp_encoded_map[] = {
      // 0x09u, 0xD8u, 0x00u, 0x45u, 
 };
 
-#define BASE64_IN_LEN  3u  // Base64 works in 3 byte units
-#define BASE64_OUT_LEN 4u  // And writes out 4 byte units
+const uint8_t * SRAM_base  = 0xA000u;
+const uint8_t * SRAM_upper = 0xB000u;
 
-#define B64_CALC_OUT_SZ(len) (((len + (BASE64_IN_LEN - 1u)) / BASE64_IN_LEN) * BASE64_OUT_LEN)
 
-const char test_str[] = "Many hands make light work.";
+static void image_to_png_qrcode_url(void);
 
-      char test_b64[ B64_CALC_OUT_SZ((ARRAY_LEN(test_str) - 1))  + 1];  // Discard string null terminator
+
+static void image_to_png_qrcode_url(void) {
+
+    SWITCH_RAM(0u); // RAM bank 0
+
+    // Output buffers in Cart SRAM, no need to allocate them
+    uint8_t * p_png_buf        = SRAM_base;
+    uint8_t * p_base64_png_buf = SRAM_upper;
+
+    // ===== Conversion to PNG =====
+    uint16_t png_buf_sz = png_indexed_init(IMG_8X8_4_COLORS_8BPP_ENCODED_WIDTH,
+                                           IMG_8X8_4_COLORS_8BPP_ENCODED_HEIGHT, 
+                                           // OUT_BPP_8,     // Current build works, to match  test_8x8_indexed_nocomp_2bpp-encoded.png use 8BPP
+                                           OUT_BPP_2,        // Output passes pngcheck and imports to GIMP ok
+                                           ARRAY_LEN(img_8x8_4_colors_8bpp_encoded_pal));
+
+    png_indexed_set_buffers(img_8x8_4_colors_8bpp_encoded_pal,
+                            img_8x8_4_colors_8bpp_encoded_map,
+                            p_png_buf);
+
+    uint16_t png_file_output_sz = png_indexed_encode();
+    EMU_printf("PNG out sz=%u\n", png_file_output_sz);
+
+
+    // ===== PNG encoding to Base64 URL =====
+    uint16_t b64_enc_len = base64_encode_to_url(p_base64_png_buf, p_png_buf, png_file_output_sz);
+
+    EMU_printf("B64 out sz=%u\n", (uint16_t)b64_enc_len);
+    EMU_printf("B64 out:%s\n", p_base64_png_buf);
+
+}
+
 
 void main(void)
 {
@@ -55,39 +85,12 @@ void main(void)
     set_default_palette();
 
     printf("Starting\n");
+    EMU_printf("\nStarting\n");
 
     vsync();
     SHOW_BKG;
 
-
-
-    uint16_t b64_enc_len = base64_encode_url(test_str, test_b64, (ARRAY_LEN(test_str) - 1)); // (ARRAY_LEN(test_str) - 1)
-
-    printf("B64 in:%s\n", (const char *)test_str);
-    printf("outlen:%u,ar=%u\n", (uint16_t)b64_enc_len, (uint16_t)ARRAY_LEN(test_b64));
-    // Fix up output with a string terminator
-    test_b64[b64_enc_len] = '\0';
-    printf("B64 out:%s\n", test_b64);
-
-while(1);
-
-    uint16_t png_buf_sz = png_indexed_init(IMG_8X8_4_COLORS_8BPP_ENCODED_WIDTH,
-                                           IMG_8X8_4_COLORS_8BPP_ENCODED_HEIGHT, 
-                                           // OUT_BPP_8,     // Current build works, to match  test_8x8_indexed_nocomp_2bpp-encoded.png use 8BPP
-                                           OUT_BPP_2,        // Output passes pngcheck and imports to GIMP ok
-                                           ARRAY_LEN(img_8x8_4_colors_8bpp_encoded_pal));
-
-    // Put the output buffer in Cart SRAM, no need to allocate it
-    // png_out_buf = malloc(png_buf_sz);
-    uint8_t * p_png_out_buf = (uint8_t *)0xA000u;
-
-    png_indexed_set_buffers(img_8x8_4_colors_8bpp_encoded_pal,
-                            img_8x8_4_colors_8bpp_encoded_map,
-                            p_png_out_buf);
-
-    uint16_t png_file_output_sz = png_indexed_encode();
-
-    printf("Done\nOut Size=%u", png_file_output_sz);
+    image_to_png_qrcode_url();
 
     // Loop forever
     while(1) {

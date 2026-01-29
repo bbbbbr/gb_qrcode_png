@@ -1,11 +1,16 @@
+#include <gbdk/platform.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>  // For memcopy()
 
 #include <stdio.h>
 
+#include <gbdk/emu_debug.h>
+
 #include "common.h"
 #include "png_indexed.h"
+
+#pragma bank 255  // Autobanked
 
 // == Uncompressed Indexed PNG Export ==
 
@@ -147,7 +152,7 @@ static uint16_t prepare_pixel_data(void);
 // - palette_data_byte_len: size of palette data array in RGB888 format (so, 4 colors = 4 * 3 = 12)
 // - bpp:                Must be 1, 2, 4 or 8
 // - width & height:     8 bit only for now
-uint16_t png_indexed_init(uint8_t width, uint8_t height, uint8_t out_bpp, uint16_t palette_data_byte_len) {
+uint16_t png_indexed_init(uint8_t width, uint8_t height, uint8_t out_bpp, uint16_t palette_data_byte_len) BANKED {
 
     // Clamp to max colors allowed by bpp
     png.width   = width;
@@ -171,7 +176,7 @@ uint16_t png_indexed_init(uint8_t width, uint8_t height, uint8_t out_bpp, uint16
 // - p_img_palette_data:         Palette buffer in RGB888 format (3 component bytes per color entry), 256 colors max
 // - p_img_pixel_color_indexes:  Source pixel data, currently 1 byte per pixel // TODO: N pixels per byte determined by 8 / bpp
 // - p_png_out_buf:              Buffer for writing the PNG file data into
-void png_indexed_set_buffers(uint8_t * p_img_palette_data, uint8_t * p_img_pixel_color_indexes, uint8_t * p_png_out_buf) {
+void png_indexed_set_buffers(uint8_t * p_img_palette_data, uint8_t * p_img_pixel_color_indexes, uint8_t * p_png_out_buf) BANKED {
 
     png.p_palette_data        = p_img_palette_data;
     png.p_pixel_color_indexes = p_img_pixel_color_indexes;
@@ -196,12 +201,12 @@ static uint16_t calc_zlib_pixel_data_size(uint8_t width, uint8_t height, const u
     const uint16_t zlib_row_chunk_sz = DEFLATE_HEADER_SZ + deflate_chunk_sz;
     const uint16_t zlib_total_size   = ZLIB_HEADER_SZ + (zlib_row_chunk_sz * height) + ZLIB_FOOTER_SZ;
 
-printf("fmax_dfz=%u\n"
-       "zck=%u, "
-       "zts=%u\n\n",
-       (uint16_t)deflate_chunk_sz,
-       (uint16_t)zlib_row_chunk_sz,
-       (uint16_t)zlib_total_size);
+    // DEBUG: printf("fmax_dfz=%u\n"
+       // "zck=%u, "
+       // "zts=%u\n\n",
+       // (uint16_t)deflate_chunk_sz,
+       // (uint16_t)zlib_row_chunk_sz,
+       // (uint16_t)zlib_total_size);
 
     return zlib_total_size;
 }
@@ -264,13 +269,13 @@ static void adler_reset(void) {
 // TODO: OPTIMIZE: 32 bit modulo is going to be brutal (optimizations for this?)
 static void adler_crc_update(uint8_t * buffer, uint16_t buffer_sz) {
 
-printf("ssz->%u:,", buffer_sz);
+    // DEBUG: printf("ssz->%u:,", buffer_sz);
     for (uint16_t i = 0u; i < buffer_sz; i++ ) {
          zlib_adler_a = (zlib_adler_a + buffer[i]) % 65521u;
          zlib_adler_b = (zlib_adler_b + zlib_adler_a) % 65521u;
-         printf("%hu,", (uint8_t)buffer[i]);
+         // DEBUG: printf("%hu,", (uint8_t)buffer[i]);
     }
-    printf("==\n");
+    // DEBUG: printf("==\n");
 }
 
 
@@ -355,15 +360,15 @@ static uint16_t prepare_pixel_data(void) {
 
     const uint16_t deflate_chunk_sz  = PNG_ROW_FILTER_TYPE_SZ + ((width + (pixels_per_byte - 1)) / pixels_per_byte);  // Needs to be rounded up in case it's not an even multiple of pixels_per_byte
 
-printf("fmax_sz=%u\n"
-       "ds=%x, "
-       "pds=%x\n",
-       (uint16_t)png.file_max_size,
-       (uint16_t)png_z_lib_data_start,
-       (uint16_t)p_zlib_pixel_rows);
+    // DEBUG: printf("fmax_sz=%u\n"
+        // "ds=%x, "
+        // "pds=%x\n",
+        // (uint16_t)png.file_max_size,
+        // (uint16_t)png_z_lib_data_start,
+        // (uint16_t)p_zlib_pixel_rows);
 
-printf("dfz=%u\n",
-       (uint16_t)deflate_chunk_sz);
+    // DEBUG: printf("dfz=%u\n",
+       // (uint16_t)deflate_chunk_sz);
 
 
     // TEST OUTPUT
@@ -431,34 +436,35 @@ printf("dfz=%u\n",
             *p_zlib_pixel_rows++ = bitpacked & 0xFF;
         }
 
-printf("a_rng=%x /sz=%x\n",
-       (uint16_t)p_zlib_adler_start,
-       (uint16_t)(p_zlib_pixel_rows - p_zlib_adler_start));
+        // DEBUG: printf("a_rng=%x /sz=%x\n",
+        // (uint16_t)p_zlib_adler_start,
+        // (uint16_t)(p_zlib_pixel_rows - p_zlib_adler_start));
 
         adler_crc_update(p_zlib_adler_start, (p_zlib_pixel_rows - p_zlib_adler_start)); // Length calc is not +1 since pointer is already at byte after end of adler range
 
-// printf("ad a=%x,b=%x\n",
-//        (uint16_t)zlib_adler_a,
-//        (uint16_t)zlib_adler_b);
+        // printf("ad a=%x,b=%x\n",
+        //        (uint16_t)zlib_adler_a,
+        //        (uint16_t)zlib_adler_b);
     }
     // Write zlib Adler crc
     p_zlib_pixel_rows = write_u16_be(p_zlib_pixel_rows, zlib_adler_b);
     p_zlib_pixel_rows = write_u16_be(p_zlib_pixel_rows, zlib_adler_a);
 
 
-printf("zfinsz=%u\n",
-       (uint16_t)(p_zlib_pixel_rows - p_zlib_pixel_rows_start));
+    // DEBUG: printf("zfinsz=%u\n",
+       // (uint16_t)(p_zlib_pixel_rows - p_zlib_pixel_rows_start));
 
     // Return resulting size (may be smaller than max size if compression is used) // Note: no compression yet :)    
     return (p_zlib_pixel_rows - p_zlib_pixel_rows_start);
 }
 
 
-uint16_t png_indexed_encode(void) {
-
+uint16_t png_indexed_encode(void) BANKED {
 
     if (!png.calc_initialized && !png.buffers_initialized)
         return 0;
+
+    EMU_PROFILE_BEGIN(" PNG prof start ");
 
     // TODO: error handling
 
@@ -509,15 +515,15 @@ uint16_t png_indexed_encode(void) {
     // PNG Indexed Color Pixel Data (in 8192 byte IDAT Chunks)
     // p_pngbuf = png_write_chunk(p_pngbuf, "IDAT", zlibPixelRows, zlibPixelRows_sz);
     // Don't actually write the pixel data since it's already been assembled in place
-printf("\npchk=%x, %u\n", (uint16_t)p_pngbuf, (uint16_t)zlib_packed_size);
+    // DEBUG: printf("\npchk=%x, %u\n", (uint16_t)p_pngbuf, (uint16_t)zlib_packed_size);
     p_pngbuf = png_write_chunk(p_pngbuf, "IDAT", NO_DATA_COPY, zlib_packed_size);
-printf("\npchk=%x\n", (uint16_t)p_pngbuf);
+    // DEBUG:  printf("\npchk=%x\n", (uint16_t)p_pngbuf);
 
     // PNG End of data
     p_pngbuf = png_write_chunk(p_pngbuf, "IEND", NO_DATA_COPY, 0);
 
-    // TODO:
-    // return "data:image/png;base64," + uint8ToBase64(p_pngbuf);
+    EMU_PROFILE_END(" PNG prof end: ");
+
     const uint16_t pngfile_final_size = p_pngbuf - png.p_png_out_buf;
     return pngfile_final_size;  // Return size of completed PNG image, NULL for error
 }

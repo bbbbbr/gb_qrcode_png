@@ -1,7 +1,28 @@
+#include <gbdk/platform.h>
 #include <stdint.h>
+#include <string.h>  // For memcopy()
+
+#include <gbdk/emu_debug.h>
 
 #include "common.h"
+#include "base64.h"
 
+
+#pragma bank 255  // Autobanked
+
+
+#define PADDING_CHAR '='
+
+// Select which base64 variant to use
+// #define URL_ENCODE
+
+#ifdef URL_ENCODE
+    #define B64_ENC_62  '-'
+    #define B64_ENC_63  '_'
+#else
+    #define B64_ENC_62  '+'
+    #define B64_ENC_63  '/'
+#endif
 
 const uint8_t base64_digit_lut[64] = {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
@@ -11,66 +32,95 @@ const uint8_t base64_digit_lut[64] = {
     'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
     'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
     'w', 'x', 'y', 'z', '0', '1', '2', '3',
-    '4', '5', '6', '7', '8', '9', '-', '_',
+    '4', '5', '6', '7', '8', '9', B64_ENC_62, B64_ENC_63
 };
 
-#define PADDING_CHAR '='
+const uint8_t url_base64_bindata_prefix[]   = "data:application/octet-stream;base64,";
+const uint8_t url_base64_pngimage_prefix[]  = "data:image/png;base64,";
+const uint8_t url_base64_pngimage_prefix_sz = ARRAY_LEN(url_base64_pngimage_prefix) - 1; // -1 to strip null terminator
+
+#define PAD_2_CHARS 2u
+#define PAD_1_CHARS 1u
 
 
-// TODO: explicit design for sram banks: src_bank, dest_bank and src-bank-read/cache/dest-bank-write pattern
-
-// TODO: redo this cleaner
-
-static uint16_t len_in;
+static uint16_t base64_encode_url_format(uint8_t * p_dest, const uint8_t * p_src, uint16_t src_len);
 
 
+uint16_t base64_encode_to_url(uint8_t * p_dest, const uint8_t * p_src, uint16_t src_len) BANKED {
+
+    // Convert to Base64 (offset past prefix)
+    uint16_t out_len = base64_encode_url_format(p_dest + url_base64_pngimage_prefix_sz, p_src, src_len);
+
+    // EMU_printf(".1 B64 sz=%u\n", (uint16_t)out_len);
+
+    // Add url prefix to the buffer and length
+    memcpy(p_dest, url_base64_pngimage_prefix, url_base64_pngimage_prefix_sz);
+    out_len += url_base64_pngimage_prefix_sz;
+
+    // EMU_printf(".2 B64 sz=%u\n", (uint16_t)out_len);
+
+    // Append string null terminator
+    p_dest[out_len] = '\0';
+    out_len++;
+
+    // EMU_printf(".2 B64 sz=%u\n", (uint16_t)out_len);
+
+    return out_len;
+}
+
+
+// TODO: Fixed, easier to read, but slower -> PROFILE: 2E14
+//
 // TODO: OPTIMIZE: Not much luck trying to optimize the C implementation (they all get slower).
 //                 Maybe for a fast version it'll have to be hand written
 //
 // Encodes URL style base64
-uint16_t base64_encode_url(const uint8_t * p_src, char * p_dest, uint16_t src_len) {
+static uint16_t base64_encode_url_format(uint8_t * p_dest, const uint8_t * p_src, uint16_t src_len) {
 
+    EMU_PROFILE_BEGIN(" B64 prof start ");
+
+    static uint16_t len_in;
+    static uint8_t b1, b2, b3;
+
+    uint8_t padding_char_count = 0u;
     uint8_t * p_dest_start = p_dest;
-    uint8_t pack;
     len_in = src_len;
 
     while (len_in) {
 
-        // Byte0[7..2]
-        *p_dest++ = base64_digit_lut[*p_src >> 2];
-
-        // Byte0[1..0] with Byte1[7..4]
-        pack = (*p_src++ & 0x03u) << 4;
-        *p_dest++ = base64_digit_lut[pack | *p_src >> 4];
-
-        // Byte1[3..0] with Byte2[7..6]
-        pack = (*p_src++ & 0x0Fu) << 2;
-        *p_dest++ = base64_digit_lut[pack | *p_src >> 6];
-
-        // Byte2[5..0]
-        *p_dest++ = base64_digit_lut[*p_src++ & 0x3Fu];
+        b1 = *p_src++;
+        b2 = *p_src++;
+        b3 = *p_src++;
 
         len_in -= 3u;
-
-        // Kind of naughty: intentionally overrun the source buffer
-        // if it's not an even multiple of 3, and then apply the padding
-        // encoding for any excess source bytes
         if (len_in == (uint16_t)-2) {
-            // 2 padding bytes, and remove 4 bits from second encoded byte
-            *p_dest-- = PADDING_CHAR;
-            *p_dest-- = PADDING_CHAR;
-            *p_dest  &= 0x30u;
-            p_dest   += 2u;
-            break;
+            len_in = 0;
+            // 2 padding bytes
+            b2 = 0u;
+            b3 = 0u;
+            padding_char_count = PAD_2_CHARS;
         }
         else if (len_in == (uint16_t)-1) {
-            // 1 padding bytes, and remove 2 bits from third encoded byte
-            *p_dest-- = PADDING_CHAR;
-            *p_dest  &= 0x3Au;
-            p_dest++;
-            break;
+            len_in = 0;
+            // 2 padding bytes
+            b3 = 0u;
+            padding_char_count = PAD_1_CHARS;
         }
+
+        *p_dest++ = base64_digit_lut[b1 >> 2];                       // Byte0[7..2]        
+        *p_dest++ = base64_digit_lut[((b1 & 0x03u) << 4) | b2 >> 4]; // Byte0[1..0] with Byte1[7..4]        
+        *p_dest++ = base64_digit_lut[((b2 & 0x0Fu) << 2) | b3 >> 6]; // Byte1[3..0] with Byte2[7..6]
+        *p_dest++ = base64_digit_lut[b3 & 0x3Fu];                    // Byte2[5..0]
     }
+
+    // Fix up padding chars at end if needed
+    switch (padding_char_count) {        
+        case PAD_2_CHARS: *(p_dest - 2u) = PADDING_CHAR; // Overwrite 3rd (of 4) previously encoded bytes with padding
+             // Intentional fall through        
+        case PAD_1_CHARS: *(p_dest - 1u) = PADDING_CHAR; // Overwrite 4th (of 4) previously encoded bytes with padding
+    }
+
+    EMU_PROFILE_END(" B64 prof end: ");
 
     // Return length
     return (p_dest - p_dest_start);
