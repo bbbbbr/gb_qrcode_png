@@ -120,6 +120,12 @@ $(BINS):	$(OBJS)
 romusage:
 	romusage -g -sRp $(BINDIR)/gbc/$(PROJECTNAME).noi
 
+pngcheck:
+	@echo --------------------------------------------------
+	@echo NOTE: Disregard data past end of IEND chunk errors
+	@echo --------------------------------------------------
+	pngcheck -vv $(BINDIR)/gbc/$(PROJECTNAME).sav
+
 clean:
 	@echo Cleaning
 	@for target in $(TARGETS); do \
