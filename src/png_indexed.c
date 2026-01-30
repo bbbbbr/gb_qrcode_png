@@ -27,11 +27,11 @@
 //    - IDAT chunk type     (4 bytes)
 //    - IDAT Payload
 //      - Zlib header (2 bytes)
-//      - Deflate chunks [One per pixel row]
+//      - Deflate chunks [Now: Only one chunk for the entire image, so max image pixel data payload is 65,535 bytes]
 //        - Final/Non-final indicator (1 byte)
 //        - Deflate Length            (2 bytes)
 //        - Deflate Length xor FF     (2 bytes)
-//          - PNG single Scanline of Row data
+//          - ALL PNG Scanlines of Row data
 //            - Row start filter[0 for none] (1 bytes)
 //            - Indexed Pixel Row Data       (width's worth of bytes)
 //      - Zlib Adler checksum (4 bytes)
@@ -197,7 +197,7 @@ static uint16_t calc_zlib_pixel_data_size(uint8_t width, uint8_t height, const u
     // Tuck the PNG row data into that
     const uint8_t pixels_per_byte = 8 / bpp;
 
-    const uint16_t deflate_chunk_sz  = PNG_ROW_FILTER_TYPE_SZ + ((width + (pixels_per_byte - 1)) / pixels_per_byte);  // Needs to be rounded up in case it's not an even multiple of pixels_per_byte
+    const uint16_t deflate_chunk_sz  = height * (PNG_ROW_FILTER_TYPE_SZ + ((width + (pixels_per_byte - 1)) / pixels_per_byte));  // Needs to be rounded up in case it's not an even multiple of pixels_per_byte
     const uint16_t zlib_row_chunk_sz = DEFLATE_HEADER_SZ + deflate_chunk_sz;
     const uint16_t zlib_total_size   = ZLIB_HEADER_SZ + (zlib_row_chunk_sz * height) + ZLIB_FOOTER_SZ;
 
@@ -323,10 +323,9 @@ static uint8_t * png_write_chunk(uint8_t * p_out_buf, const char * type, const u
 
 
 
-// TODO: OPTIMIZE: Stop encapsulating each row as separate zlib chunk to reduce size overhead?... But will that result in a slower adler check? -> probably not with current adler calc
 // TODO: OPTIMIZE: separate functions for 1bpp/2bpp/etc -> IN PARTICULAR ONES THAT TAKE 1BPP / 2BPP DATA AS SOURCE TO REDUCE SIZE (i.e. take gb bpp data directly)
 // TODO: FEATURE: Require source bpp to match out bpp? (may be needed to reduce memory required by 1-8x) 
-// TODO: FEATURE: Accept data in gb tile format? (1 or 2bpp, repack the bytes into the output buffer)    - WAIT UNTIL PORTED CODE IS WORKING FIRST
+// TODO: FEATURE: Accept data in gb tile format? (1 or 2bpp, repack the bytes into the output buffer)
 //
 //  NOTE: Currently assumes incoming BPP is 8
 static uint16_t prepare_pixel_data(void) {
@@ -358,7 +357,7 @@ static uint16_t prepare_pixel_data(void) {
     const uint8_t pixels_per_byte = 8 / bpp;
 
 
-    const uint16_t deflate_chunk_sz  = PNG_ROW_FILTER_TYPE_SZ + ((width + (pixels_per_byte - 1)) / pixels_per_byte);  // Needs to be rounded up in case it's not an even multiple of pixels_per_byte
+    const uint16_t deflate_chunk_sz  = height * (PNG_ROW_FILTER_TYPE_SZ + ((width + (pixels_per_byte - 1)) / pixels_per_byte));  // Needs to be rounded up in case it's not an even multiple of pixels_per_byte
 
     // DEBUG: printf("fmax_sz=%u\n"
         // "ds=%x, "
@@ -378,18 +377,20 @@ static uint16_t prepare_pixel_data(void) {
     *p_zlib_pixel_rows++ = ZLIB_HEADER_CMF;
     *p_zlib_pixel_rows++ = ZLIB_HEADER_FLG;
 
+    // To save space this now uses a single DEFLATE block for all pixel data, so the limit is 65,535 bytes
+    // Deflate Header
+    *p_zlib_pixel_rows++ = DEFLATE_HEADER_FINAL_YES;
+    // 
+    p_zlib_pixel_rows = write_u16_le(p_zlib_pixel_rows, deflate_chunk_sz);
+    p_zlib_pixel_rows = write_u16_le(p_zlib_pixel_rows, deflate_chunk_sz ^ 0xFFFFu);
+
+    // PNG Row filter header + row data
+    uint8_t * p_zlib_adler_start = p_zlib_pixel_rows;
+
     // Write out the scanline pixel index rows
     for (uint8_t y = 0u; y < height; y++) {
 
-        // TODO: OPTIMIZE: discard deflate block per pixel row and put everything in a single block since output it will always be less than block limit (65,535 bytes)
-        // Deflate Header
-        *p_zlib_pixel_rows++ = (y == (height - 1)) ? DEFLATE_HEADER_FINAL_YES :  DEFLATE_HEADER_FINAL_NO;
-        // 
-        p_zlib_pixel_rows = write_u16_le(p_zlib_pixel_rows, deflate_chunk_sz);
-        p_zlib_pixel_rows = write_u16_le(p_zlib_pixel_rows, deflate_chunk_sz ^ 0xFFFFu);
-
-        // PNG Row filter header + row data
-        uint8_t * p_zlib_adler_start = p_zlib_pixel_rows;
+        // Start of each PNG row has a Row Filter Type byte
         *p_zlib_pixel_rows++ = PNG_ROW_FILTER_TYPE_NONE;
 
         // uint16_t last_x, // TODO: unused in C version?
@@ -436,16 +437,18 @@ static uint16_t prepare_pixel_data(void) {
             *p_zlib_pixel_rows++ = bitpacked & 0xFF;
         }
 
-        // DEBUG: printf("a_rng=%x /sz=%x\n",
-        // (uint16_t)p_zlib_adler_start,
-        // (uint16_t)(p_zlib_pixel_rows - p_zlib_adler_start));
-
-        adler_crc_update(p_zlib_adler_start, (p_zlib_pixel_rows - p_zlib_adler_start)); // Length calc is not +1 since pointer is already at byte after end of adler range
-
-        // printf("ad a=%x,b=%x\n",
-        //        (uint16_t)zlib_adler_a,
-        //        (uint16_t)zlib_adler_b);
     }
+    // DEBUG: printf("a_rng=%x /sz=%x\n",
+    // (uint16_t)p_zlib_adler_start,
+    // (uint16_t)(p_zlib_pixel_rows - p_zlib_adler_start));
+
+    // Adler checksum for all DEFLATE payload data (excluding last chunk indicators and size headers)
+    adler_crc_update(p_zlib_adler_start, (p_zlib_pixel_rows - p_zlib_adler_start)); // Length calc is not +1 since pointer is already at byte after end of adler range
+
+    // printf("ad a=%x,b=%x\n",
+    //        (uint16_t)zlib_adler_a,
+    //        (uint16_t)zlib_adler_b);
+
     // Write zlib Adler crc
     p_zlib_pixel_rows = write_u16_be(p_zlib_pixel_rows, zlib_adler_b);
     p_zlib_pixel_rows = write_u16_be(p_zlib_pixel_rows, zlib_adler_a);
