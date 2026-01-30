@@ -11,7 +11,7 @@
 
 // See qrcodegen.h for setting the QR code version/capacity
 
-#define SCALE 4  // pixel size multiplier for output rendering
+#define SCALE 1  // pixel size multiplier for output rendering
 
 bool qr_generate(const char * embed_str, uint16_t len) NONBANKED {
 
@@ -37,21 +37,34 @@ void qr_render(void) NONBANKED {
     uint8_t save_bank = CURRENT_BANK;
     SWITCH_ROM(BANK(qrcodegen));
 
-    for (uint8_t x = 0; x < (QR_FINAL_PIXEL_WIDTH); x++) {
-        for (uint8_t y = 0; y < (QR_FINAL_PIXEL_HEIGHT); y++) {
-            if (qr(x,y))                
-                color(WHITE,WHITE,SOLID);
-            else
-                color(BLACK,BLACK,SOLID);
+    #ifdef SCALE == 1
+        for (uint8_t x = 0; x < (QR_FINAL_PIXEL_WIDTH); x++) {
+            for (uint8_t y = 0; y < (QR_FINAL_PIXEL_HEIGHT); y++) {
+                if (qr(x,y))                
+                    color(WHITE,WHITE,SOLID);
+                else
+                    color(BLACK,BLACK,SOLID);
 
-            // If scaling isn't needed (i.e SCALE is 1) then this is faster:
-            // plot_point(x, y);
-
-            uint8_t x1 = x * SCALE;
-            uint8_t y1 = y * SCALE;
-            box(x1, y1, x1 + (SCALE - 1), y1 + (SCALE - 1), M_FILL);
+                plot_point(x, y);
+            }
         }
-    }
+    #else
+        for (uint8_t x = 0; x < (QR_FINAL_PIXEL_WIDTH); x++) {
+            for (uint8_t y = 0; y < (QR_FINAL_PIXEL_HEIGHT); y++) {
+                if (qr(x,y))                
+                    color(WHITE,WHITE,SOLID);
+                else
+                    color(BLACK,BLACK,SOLID);
+
+                // If scaling isn't needed (i.e SCALE is 1) then this is faster:
+                // plot_point(x, y);
+
+                uint8_t x1 = x * SCALE;
+                uint8_t y1 = y * SCALE;
+                box(x1, y1, x1 + (SCALE - 1), y1 + (SCALE - 1), M_FILL);
+            }
+        }
+    #endif
 
     SWITCH_ROM(save_bank);    
 }

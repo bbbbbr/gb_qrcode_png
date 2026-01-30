@@ -89,7 +89,7 @@ enum qrcodegen_Mask {
 
 enum qrcodegen_Mode {
 	qrcodegen_Mode_NUMERIC      = 0x1,
-	qrcodegen_Mode_ALPHANUMERIC = 0x2,
+	qrcodegen_Mode_ALPHANUMERIC = 0x2,  // 0–9, A–Z (upper-case only), space, $, %, *, +, -, ., /, :   Note: No semicolon as needed for mime header
 	qrcodegen_Mode_BYTE         = 0x4,
 	qrcodegen_Mode_KANJI        = 0x8,
 	qrcodegen_Mode_ECI          = 0x7,
@@ -100,8 +100,8 @@ enum qrcodegen_Mode {
 // #define qrcodegen_BUFFER_SZ  (QRPAD * QRSIZE/8)
 #define qrcodegen_BUFFER_SZ  (QR_OUTPUT_ROW_SZ_BYTES * QR_FINAL_PIXEL_HEIGHT)
 
-static uint8_t TMPBUFFER[qrcodegen_BUFFER_SZ];
-static uint8_t QRCODE[qrcodegen_BUFFER_SZ];
+uint8_t TMPBUFFER[qrcodegen_BUFFER_SZ];
+uint8_t QRCODE[qrcodegen_BUFFER_SZ];
 
 #define qrcodegen_REED_SOLOMON_DEGREE_MAX 30  // Based on the table above
 
