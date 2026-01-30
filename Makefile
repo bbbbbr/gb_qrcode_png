@@ -117,6 +117,9 @@ $(BINS):	$(OBJS)
 	$(LCC) $(LCCFLAGS) $(CFLAGS) -o $(BINDIR)/$(PROJECTNAME).$(EXT) $(PNGOBJS) $(OBJS)
 #	romusage -g -sRp $(BINDIR)/$(PROJECTNAME).$(EXT)
 
+romusage:
+	romusage -g -sRp $(BINDIR)/gbc/$(PROJECTNAME).noi
+
 clean:
 	@echo Cleaning
 	@for target in $(TARGETS); do \
