@@ -6,8 +6,10 @@
 #include <stdio.h>
 
 #include "common.h"
+
 #include "png_indexed.h"
 #include "base64.h"
+#include "qr_wrapper.h"
 
 #define OUT_BPP_1  1u
 #define OUT_BPP_2  2u
@@ -49,8 +51,8 @@ static void image_to_png_qrcode_url(void) {
     SWITCH_RAM(0u); // RAM bank 0
 
     // Output buffers in Cart SRAM, no need to allocate them
-    uint8_t * p_png_buf        = SRAM_base;
-    uint8_t * p_base64_png_buf = SRAM_upper;
+    uint8_t * p_png_buf            = SRAM_base;
+    uint8_t * p_base64_png_url_str = SRAM_upper;
 
     // ===== Conversion to PNG =====
     uint16_t png_buf_sz = png_indexed_init(IMG_8X8_4_COLORS_8BPP_ENCODED_WIDTH,
@@ -68,10 +70,19 @@ static void image_to_png_qrcode_url(void) {
 
 
     // ===== PNG encoding to Base64 URL =====
-    uint16_t b64_enc_len = base64_encode_to_url(p_base64_png_buf, p_png_buf, png_file_output_sz);
+    uint16_t b64_enc_len = base64_encode_to_url(p_base64_png_url_str, p_png_buf, png_file_output_sz);
 
     EMU_printf("B64 out sz=%u\n", (uint16_t)b64_enc_len);
-    EMU_printf("B64 out:%s\n", p_base64_png_buf);
+    EMU_printf("B64 out:%s\n", p_base64_png_url_str);
+
+    // TODO: move buffer to SRAM, possible overwrite previously generated PNG file output
+    EMU_printf("Generating QR Code\n");
+    if (qr_generate(p_base64_png_url_str, b64_enc_len) ) {
+        EMU_printf("Rendering QR Code\n");
+        qr_render();
+    } else {
+        EMU_printf("QR Code gen Error\n");
+    }
 
 }
 
