@@ -1,9 +1,10 @@
 #include <gbdk/platform.h>
 #include <gbdk/incbin.h>
 #include <gbdk/emu_debug.h>
+#include <gb/drawing.h>
 #include <stdint.h>
 
-#include <stdio.h>
+// #include <stdio.h>
 
 #include "common.h"
 
@@ -146,8 +147,10 @@ void image_to_png_qrcode_url(void) {
     // - Ported C implementation doesn't support other modes
     // - Alphanumeric mode character set doesn't include all chars needed for base64 encoded strings and mime header chars (;)
     //
+    gotogxy(0,0);
+    gprintf("Generating QR Code");
+
     EMU_printf("Generating QR Code\n");
-    printf("Generating QR Code\n");
     if (qr_generate(p_base64_png_url_str, b64_enc_len) ) {
         EMU_printf("Rendering QR Code\n");
         qr_render();

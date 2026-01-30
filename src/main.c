@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "input.h"
+
 #include "img_2_qrcode.h"
 
 
@@ -28,7 +29,12 @@ void main(void)
         draw_update();
 
         if (KEYS() & J_START) {
+            // TODO: Save the drawing (VRAM) to cart SRAM and then restore it after QRcode is done
             image_to_png_qrcode_url();
+            waitpadticked_lowcpu(J_ANY);
+            // return_to_drawing_mode();
+            redraw_workarea();
+            SHOW_SPRITES;
         }
 
         vsync();

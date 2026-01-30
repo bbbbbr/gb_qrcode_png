@@ -28,18 +28,10 @@ static const unsigned char mouse_cursors[] = {
   0xFE, 0xA2, 0xFE, 0x82, 0x7E, 0x42, 0x3E, 0x3E
 };
 
-void draw_init(void) BANKED {
-    HIDE_BKG;
-    HIDE_SPRITES;
 
-    set_sprite_data(0u, 2u, mouse_cursors);
-    set_sprite_tile(SPRITE_MOUSE_CURSOR, 1u);
-    move_sprite(0, 160u / 2, 144u / 2);
-
-    // == Enters drawing mode ==
-
+// Draws the paint working area
+void redraw_workarea(void) BANKED {
     // Fill screen with black
-    mode(M_DRAWING);
     color(BLACK, BLACK, SOLID);
     box(0u, 0u, DEVICE_SCREEN_PX_WIDTH - 1u, DEVICE_SCREEN_PX_HEIGHT - 1u, M_FILL);
 
@@ -50,8 +42,22 @@ void draw_init(void) BANKED {
     // For pixel drawing
     color(BLACK,WHITE,SOLID);
 
-
     EMU_printf("Display: %hux%hu\n", (uint8_t)IMG_WIDTH_PX, (uint8_t)IMG_HEIGHT_PX);
+}
+
+
+void draw_init(void) BANKED {
+    HIDE_BKG;
+    HIDE_SPRITES;
+
+    set_sprite_data(0u, 2u, mouse_cursors);
+    set_sprite_tile(SPRITE_MOUSE_CURSOR, 1u);
+    move_sprite(0, 160u / 2, 144u / 2);
+
+    // == Enters drawing mode ==
+    mode(M_DRAWING);
+
+    redraw_workarea();
 
     DISPLAY_ON;
     SPRITES_8x8;
@@ -68,11 +74,11 @@ void draw_update(void) BANKED {
     static uint8_t cursor_y = DEVICE_SCREEN_PX_HEIGHT / 2;
     static bool    buttons_up_pending = false;
 
-    if      (KEYS() & J_LEFT)  cursor_x--;
-    else if (KEYS() & J_RIGHT) cursor_x++;
+    if      (KEYS() & J_LEFT)  { if (cursor_x > IMG_X_START) cursor_x--; }
+    else if (KEYS() & J_RIGHT) { if (cursor_x < IMG_X_END)   cursor_x++; }
 
-    if      (KEYS() & J_UP)   cursor_y--;
-    else if (KEYS() & J_DOWN) cursor_y++;
+    if      (KEYS() & J_UP)   { if (cursor_y > IMG_Y_START) cursor_y--; }
+    else if (KEYS() & J_DOWN) { if (cursor_y < IMG_Y_END)   cursor_y++; }
 
     // Move the cursor
     move_sprite(SPRITE_MOUSE_CURSOR, cursor_x + DEVICE_SPRITE_PX_OFFSET_X, cursor_y + DEVICE_SPRITE_PX_OFFSET_Y);
