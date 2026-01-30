@@ -55,6 +55,7 @@ static void image_to_png_qrcode_url(void) {
     uint8_t * p_base64_png_url_str = SRAM_upper;
 
     // ===== Conversion to PNG =====
+    printf("Generating PNG\n");
     uint16_t png_buf_sz = png_indexed_init(IMG_8X8_4_COLORS_8BPP_ENCODED_WIDTH,
                                            IMG_8X8_4_COLORS_8BPP_ENCODED_HEIGHT, 
                                            // OUT_BPP_8,     // Current build works, to match  test_8x8_indexed_nocomp_2bpp-encoded.png use 8BPP
@@ -68,15 +69,23 @@ static void image_to_png_qrcode_url(void) {
     uint16_t png_file_output_sz = png_indexed_encode();
     EMU_printf("PNG out sz=%u\n", png_file_output_sz);
 
-
     // ===== PNG encoding to Base64 URL =====
+    printf("Base 64 Encode PNG\n");
     uint16_t b64_enc_len = base64_encode_to_url(p_base64_png_url_str, p_png_buf, png_file_output_sz);
 
     EMU_printf("B64 out sz=%u\n", (uint16_t)b64_enc_len);
     EMU_printf("B64 out:%s\n", p_base64_png_url_str);
 
+    
     // TODO: move buffer to SRAM, possible overwrite previously generated PNG file output
+
+    // ===== PNG encoding to Base64 URL =====
+    // QR Code is generated in byte mode because:
+    // - Ported C implementation doesn't support other modes
+    // - Alphanumeric mode character set doesn't include all chars needed for base64 encoded strings and mime header chars (;)
+    //
     EMU_printf("Generating QR Code\n");
+    printf("Generating QR Code\n");    
     if (qr_generate(p_base64_png_url_str, b64_enc_len) ) {
         EMU_printf("Rendering QR Code\n");
         qr_render();
@@ -95,7 +104,7 @@ void main(void)
     cpu_fast();
     set_default_palette();
 
-    printf("Starting\n");
+    // printf("Starting\n");
     EMU_printf("\nStarting\n");
 
     vsync();

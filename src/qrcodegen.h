@@ -9,16 +9,16 @@ BANKREF_EXTERN(qrcodegen)
 // Also, see "Byte sz" column table further below for selecting QRVERSION
 // Only configured for "Byte" mode operation
 //
-#define QRVERSION 3                   // <---- Configurable to change size and capacity <----
-// #define QRVERSION 4
+// #define QRVERSION 3                   // <---- Configurable to change size and capacity <----
+#define QRVERSION 31
 
 
 // Manually set this based on the "Byte sz" column that matches:
 // - The "Error Correction" Low setting
 // - And the "Version" which matches QRVERSION above
 //
-#define QR_MAX_PAYLOAD_BYTES 53u      // <---- Change this based on the table below and QRVERSION above <----
-// #define QR_MAX_PAYLOAD_BYTES 78u  // Size for Version "4"
+// #define QR_MAX_PAYLOAD_BYTES 53u      // <---- Change this based on the table below and QRVERSION above <----
+#define QR_MAX_PAYLOAD_BYTES 1840  // Size for Version "10" in Byte mode, Low Quality
 //
 // For example these are the defaults for Version "3"
 // | Version   |                             |   Byte sz     |
