@@ -12,7 +12,8 @@
 #define IMG_BPP        PNG_BPP_1
 #define TILE_SZ_PX         8u
 
-#define IMG_WIDTH_TILES   13u
+// Note: Optimized display capture/read -> png relies on image being aligned to tiles horizontally
+#define IMG_WIDTH_TILES   12u
 #define IMG_HEIGHT_TILES  12u
 
 #define IMG_WIDTH_PX      (IMG_WIDTH_TILES  * TILE_SZ_PX)
@@ -20,6 +21,9 @@
 
 #define IMG_X_START       ((DEVICE_SCREEN_PX_WIDTH  - IMG_WIDTH_PX) / 2u)
 #define IMG_Y_START       ((DEVICE_SCREEN_PX_HEIGHT - IMG_HEIGHT_PX) / 2u)
+
+#define IMG_TILE_X_START  (IMG_X_START / TILE_SZ_PX)
+#define IMG_TILE_Y_START  (IMG_Y_START / TILE_SZ_PX)
 
 #define IMG_X_END         ((IMG_X_START + IMG_WIDTH_PX)  - 1u)
 #define IMG_Y_END         ((IMG_Y_START + IMG_HEIGHT_PX) - 1u)

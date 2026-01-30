@@ -4,6 +4,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define PNG_BPP_1  1u
+#define PNG_BPP_2  2u
+#define PNG_BPP_4  4u
+#define PNG_BPP_8  8u
+
+#define SRC_BPP_1  1u
+#define SRC_BPP_2  2u
+#define SRC_BPP_4  4u
+#define SRC_BPP_8  8u
+
+
 typedef struct png_data_t {
 
     // Input vars
@@ -28,7 +39,7 @@ typedef struct png_data_t {
 
 
 // Call this first to initialize, use the returned value to allocate a buffer to build the png inside of
-uint16_t png_indexed_init(uint8_t width, uint8_t height, uint8_t out_bpp, uint16_t palette_data_byte_len) BANKED;
+uint16_t png_indexed_init(uint8_t width, uint8_t height, uint8_t in_bpp, uint8_t out_bpp, uint16_t palette_data_byte_len) BANKED;
 
 // Sets the working buffers (note lack of size checking)
 void png_indexed_set_buffers(uint8_t * p_img_palette_data, uint8_t * p_img_pixel_color_indexes, uint8_t * p_png_out_buf) BANKED;

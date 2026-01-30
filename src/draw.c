@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include <gb/drawing.h>
+#include <gbdk/emu_debug.h>  // Sensitive to duplicated line position across source files
 
 #include "common.h"
 #include "input.h"
@@ -45,14 +46,18 @@ void draw_init(void) BANKED {
     // Fill active image area in white
     color(WHITE, WHITE, SOLID);
     box(IMG_X_START, IMG_Y_START, IMG_X_END, IMG_Y_END, M_FILL);
-    // // For pixel drawing
+
+    // For pixel drawing
     color(BLACK,WHITE,SOLID);
+
+
+    EMU_printf("Display: %hux%hu\n", (uint8_t)IMG_WIDTH_PX, (uint8_t)IMG_HEIGHT_PX);
 
     DISPLAY_ON;
     SPRITES_8x8;
 
     SHOW_BKG;
-    SHOW_SPRITES;    
+    SHOW_SPRITES;
 }
 
 
@@ -62,7 +67,7 @@ void draw_update(void) BANKED {
     static uint8_t cursor_x = DEVICE_SCREEN_PX_WIDTH / 2;
     static uint8_t cursor_y = DEVICE_SCREEN_PX_HEIGHT / 2;
     static bool    buttons_up_pending = false;
-    
+
     if      (KEYS() & J_LEFT)  cursor_x--;
     else if (KEYS() & J_RIGHT) cursor_x++;
 
@@ -73,7 +78,7 @@ void draw_update(void) BANKED {
     move_sprite(SPRITE_MOUSE_CURSOR, cursor_x + DEVICE_SPRITE_PX_OFFSET_X, cursor_y + DEVICE_SPRITE_PX_OFFSET_Y);
 
     switch (KEYS() & (J_A | J_B)) {
-        case (J_A | J_B): 
+        case (J_A | J_B):
             // Fill active image area in white
             color(WHITE, WHITE, SOLID);
             box(IMG_X_START, IMG_Y_START, IMG_X_END, IMG_Y_END, M_FILL);
