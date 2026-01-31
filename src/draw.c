@@ -54,6 +54,8 @@ void drawing_restore_default_colors(void) BANKED {
 
 // Draws the paint working area
 void redraw_workarea(void) BANKED {
+
+    DISPLAY_OFF;
     // Fill screen with black
     color(BLACK, BLACK, SOLID);
     box(0u, 0u, DEVICE_SCREEN_PX_WIDTH - 1u, DEVICE_SCREEN_PX_HEIGHT - 1u, M_FILL);
@@ -64,6 +66,8 @@ void redraw_workarea(void) BANKED {
 
     // For pixel drawing
     color(BLACK,WHITE,SOLID);
+
+    DISPLAY_ON;
 
     EMU_printf("Display: %hux%hu\n", (uint8_t)IMG_WIDTH_PX, (uint8_t)IMG_HEIGHT_PX);
 }
