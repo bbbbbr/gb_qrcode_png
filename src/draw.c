@@ -93,9 +93,14 @@ void draw_init(void) BANKED {
 // Expects UPDATE_KEYS() to have been called before each invocation
 void draw_update(void) BANKED {
 
+    static uint8_t last_cursor_x = CURSOR_POS_UNSET;
+    static uint8_t last_cursor_y = CURSOR_POS_UNSET;
+
     static uint8_t cursor_x = DEVICE_SCREEN_PX_WIDTH / 2;
     static uint8_t cursor_y = DEVICE_SCREEN_PX_HEIGHT / 2;
+
     static bool    buttons_up_pending = false;
+
 
     if      (KEYS() & J_LEFT)  { if (cursor_x > IMG_X_START) cursor_x--; }
     else if (KEYS() & J_RIGHT) { if (cursor_x < IMG_X_END)   cursor_x++; }
@@ -108,19 +113,35 @@ void draw_update(void) BANKED {
 
     switch (KEYS() & (J_A | J_B)) {
         case (J_A | J_B):
+            // Clear the screen and reset some things
+
             // Fill active image area in white
             color(WHITE, WHITE, SOLID);
             box(IMG_X_START, IMG_Y_START, IMG_X_END, IMG_Y_END, M_FILL);
             // // For pixel drawing
             color(BLACK, WHITE, SOLID);
+            last_cursor_x = last_cursor_y = CURSOR_POS_UNSET;
+
             // Wait for both buttons up before drawing again to avoid leaving a dot after clearing screen
             buttons_up_pending = true;
             break;
 
-        case J_A: if (!buttons_up_pending) plot_point(cursor_x, cursor_y);
+        case J_A: if (!buttons_up_pending) {
+                        plot_point(cursor_x, cursor_y);
+                        last_cursor_x = cursor_x;
+                        last_cursor_y = cursor_y;
+                    }
             break;
 
-        case J_B: break;
+        case J_B: if (!buttons_up_pending) {
+                        if (last_cursor_x != CURSOR_POS_UNSET) {
+                            line(last_cursor_x, last_cursor_y, cursor_x, cursor_y);
+                        }
+                        last_cursor_x = cursor_x;
+                        last_cursor_y = cursor_y;
+                    }
+            break;
+
 
         default: // no buttons pressed
             buttons_up_pending = false;
