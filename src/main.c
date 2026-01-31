@@ -13,8 +13,10 @@ void main(void)
     ENABLE_RAM;
     SWITCH_RAM(0u); // RAM bank 0
 
-    cpu_fast();
-    set_default_palette();
+    if (_cpu == CGB_TYPE) {
+        cpu_fast();
+        set_default_palette();
+    }
 
     UPDATE_KEYS();
 
