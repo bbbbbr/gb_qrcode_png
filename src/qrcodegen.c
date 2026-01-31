@@ -317,16 +317,18 @@ static uint8_t reedSolomonMultiply02(uint8_t x_) {
 static uint8_t rsdiv[qrcodegen_REED_SOLOMON_DEGREE_MAX];
 static uint8_t rsremainder[qrcodegen_REED_SOLOMON_DEGREE_MAX];
 static const uint8_t *rsdata;
-static void reedSolomonComputeRemainder(const uint8_t data_[], uint8_t dataLen) {
+static SFR dataLen;
+static void reedSolomonComputeRemainder(const uint8_t data_[], uint8_t dataLen_) {
 
     rsdata = data_;
+    dataLen = dataLen_;
     memset(rsremainder,0,RSDegree);
 
     for (uint8_t i = 0; i < dataLen; i++) {  // Polynomial division
 		rs_y = (*rsdata++) ^ rsremainder[0];
 
         for (uint8_t j = 0; j < RSDegree-1; j++)
-			rsremainder[j] =  reedSolomonMultiply(rsdiv[j])^rsremainder[j+1];
+            rsremainder[j] =  reedSolomonMultiply(rsdiv[j])^rsremainder[j+1];
 
 		rsremainder[RSDegree - 1] = reedSolomonMultiply(rsdiv[RSDegree - 1]);
 
