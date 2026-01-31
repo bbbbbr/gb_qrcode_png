@@ -103,7 +103,7 @@ enum qrcodegen_Mode {
 uint8_t TMPBUFFER[qrcodegen_BUFFER_SZ];
 uint8_t QRCODE[qrcodegen_BUFFER_SZ];
 
-#define qrcodegen_REED_SOLOMON_DEGREE_MAX 30  // Based on the table above
+#define qrcodegen_REED_SOLOMON_DEGREE_MAX 30  // Based on the table ECC_CODEWORDS_PER_BLOCK_D
 
 #define  SKIP1(a,...) __VA_ARGS__,a
 #define  SKIP2(...)    SKIP1H(SKIP1(__VA_ARGS__))
@@ -237,9 +237,35 @@ INLINE int getNumDataCodewords(void) {
 
 // Returns the product of the two given field elements modulo GF(2^8/0x11D).
 // All inputs are valid. This could be implemented as a 256*256 lookup table.
-// TODO: Optimize - try lookup table split into 4 banks
+//
+// Optimized version with lookup tables: 13,651,906 cycles -> 5,520,276 (time reduced by 60%)
+//
+// TODO: OPTIONAL: Skipping the initial bank save and doing direct register writes takes it down
+//                 to 3,609,216, but should only be done if there will be no interrupts that switch banks.
+//        #define RS_LUT_NOSAVE_BANK   
+//
+static SFR rs_y;
+static SFR rs_savebank;
+static uint8_t reedSolomonMultiply(uint8_t x_) NONBANKED {
 
-static uint8_t rs_y;
+    #ifndef RS_LUT_NOSAVE_BANK
+        rs_savebank = CURRENT_BANK;
+        SWITCH_ROM((x_ >> 6) + 1u); // Tables are located in banks 1-4
+    #else
+        rROMB0 = ((x_ >> 6) + 1u); // Tables are located in banks 1-4
+    #endif
+
+    uint8_t result = *(const uint8_t *)(((uint16_t)((x_ & 0x3Fu) | 0x40u) << 8) + rs_y);
+
+    #ifndef RS_LUT_NOSAVE_BANK
+        SWITCH_ROM(rs_savebank);
+    #else
+        rROMB0 = CURRENT_BANK;
+    #endif
+
+    return result;
+}
+/*
 static uint8_t reedSolomonMultiply(uint8_t x_) {
 	// Russian peasant multiplication
 	uint8_t x=x_, y=rs_y, z=0;
@@ -261,6 +287,7 @@ static uint8_t reedSolomonMultiply(uint8_t x_) {
     if (y & 0x01) z ^= x;
 	return z;
 }
+*/
 
 static uint8_t reedSolomonMultiply02(uint8_t x_) {
 	// Russian peasant multiplication
@@ -295,7 +322,7 @@ static void reedSolomonComputeRemainder(const uint8_t data_[], uint8_t dataLen) 
     rsdata = data_;
     memset(rsremainder,0,RSDegree);
 
-	for (uint8_t i = 0; i < dataLen; i++) {  // Polynomial division
+    for (uint8_t i = 0; i < dataLen; i++) {  // Polynomial division
 		rs_y = (*rsdata++) ^ rsremainder[0];
 
         for (uint8_t j = 0; j < RSDegree-1; j++)

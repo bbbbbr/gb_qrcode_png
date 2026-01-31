@@ -126,6 +126,17 @@ pngcheck:
 	@echo --------------------------------------------------
 	pngcheck -vv $(BINDIR)/gbc/$(PROJECTNAME).sav
 
+buildutil:
+	rm -f util/reedsolomon_mmul_lut
+	cc util/reedsolomon_mul_lut.c -o util/reedsolomon_mmul_lut
+	strip util/reedsolomon_mmul_lut
+
+qrcodeluts:
+	util/reedsolomon_mmul_lut 0 > $(SRCDIR)/qrcode_rsmul_lut_0.c
+	util/reedsolomon_mmul_lut 1 > $(SRCDIR)/qrcode_rsmul_lut_1.c
+	util/reedsolomon_mmul_lut 2 > $(SRCDIR)/qrcode_rsmul_lut_2.c
+	util/reedsolomon_mmul_lut 3 > $(SRCDIR)/qrcode_rsmul_lut_3.c
+
 clean:
 	@echo Cleaning
 	@for target in $(TARGETS); do \
