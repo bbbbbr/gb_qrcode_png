@@ -23,7 +23,7 @@
 
 #include <gbdk/platform.h>
 
-#pragma bank 1  // Autobanked
+#pragma bank 255  // Autobanked
 
 BANKREF(qrcodegen)
 
