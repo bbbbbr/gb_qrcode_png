@@ -25,8 +25,10 @@
 
 #pragma bank 255  // Autobanked
 
+
 BANKREF(qrcodegen)
 
+#include <gbdk/emu_debug.h>
 // #define STANDALONE
 
 #ifdef STANDALONE
@@ -655,12 +657,64 @@ INLINE int numCharCountBits(void) { return SELECT(((QRVERSION + 7) / 17), 8, 16,
 
 // Appends the given number of low-order bits of the given value to the given byte-based
 // bit buffer, increasing the bit length. Requires 0 <= numBits <= 16 and val < 2^numBits.
-INLINE void appendBitsToBuffer(unsigned int val, int numBits, uint8_t buffer[], int *bitLen) {
+// INLINE
+void appendBitsToBuffer(unsigned int val, int numBits, uint8_t buffer[], int *bitLen) {
 	assert(0 <= numBits && numBits <= 16 && (unsigned long)val >> numBits == 0);
 	for (int i = numBits - 1; i >= 0; i--, (*bitLen)++)
 		buffer[*bitLen >> 3] |= ((val >> i) & 1) << (7 - (*bitLen & 7));
 }
 
+// INLINE
+// Much faster version of appendBitsToBuffer() which accepts only whole bytes 
+void appendByteBitsToBuffer(uint8_t * p_srcdata, uint8_t * p_outdata, uint16_t byte_len, int *bitLen) {
+
+    if (byte_len == 0) return;
+
+    static uint8_t bit_alignment;
+    bit_alignment = (*bitLen & 7);
+
+    // Append number of bits in return length field
+    *bitLen += byte_len * 8u;
+
+    // If bit alignment is 0 then take a fast path since no bit shifting is needed
+    if (bit_alignment == 0u) {
+        while (byte_len-- > 0) {
+            *p_outdata-- = *p_srcdata;
+        }
+    }
+    else {
+        uint8_t clear_bits_mask = ~((1u << (8u - *bitLen)) - 1u);
+
+        while (byte_len-- > 0) {
+
+            uint8_t byte_in = *p_srcdata++;
+
+            switch(bit_alignment) {
+               case 1u: *p_outdata++ = (*p_outdata & 0x80u) | (byte_in >> 1);  // Mask out trailing bits of current byte and or in new bits
+                        *p_outdata   = (byte_in << 7);                         // No need to mask on next bit, write directly
+                        break;
+               case 2u: *p_outdata++ = (*p_outdata & 0xC0u) | (byte_in >> 2);
+                        *p_outdata   = (byte_in << 6);
+                        break;
+               case 3u: *p_outdata++ = (*p_outdata & 0xE0u) | (byte_in >> 3);
+                        *p_outdata   = (byte_in << 5);
+                        break;
+               case 4u: *p_outdata++ = (*p_outdata & 0xF0u) | (byte_in >> 4);
+                        *p_outdata   = (byte_in << 4);
+                        break;
+               case 5u: *p_outdata++ = (*p_outdata & 0xF8u) | (byte_in >> 5);
+                        *p_outdata   = (byte_in << 3);
+                        break;
+               case 6u: *p_outdata++ = (*p_outdata & 0xFCu) | (byte_in >> 6);
+                        *p_outdata   = (byte_in << 2);
+                        break;
+               case 7u: *p_outdata++ = (*p_outdata & 0xFEu) | (byte_in >> 7);
+                        *p_outdata   = (byte_in << 1);
+                        break;
+            }
+        }
+    }
+}
 
 
 /*---- Low-level QR Code encoding functions ----*/
@@ -670,6 +724,10 @@ INLINE void appendBitsToBuffer(unsigned int val, int numBits, uint8_t buffer[], 
 ////////////////////////////////////////////////////////////////////////
 //
 
+// Optimize incoming data bit appending:
+//   Starting point             _qrcodegen Self Time        8,275,456   1 / _qrcodegen      ~36,670,988
+//   +appendByteBitsToBuffer()  _qrcodegen Self Time          674,136   1 / _qrcodegen       28,679,410 
+//
 // uint8_t *qrcodegen(const char *text) {
 uint8_t *qrcodegen(const char *text, uint16_t len) BANKED {
     
@@ -685,10 +743,17 @@ uint8_t *qrcodegen(const char *text, uint16_t len) BANKED {
 	int bitLen = 0;
     appendBitsToBuffer((unsigned int)MODE, 4, QRCODE, &bitLen);
     appendBitsToBuffer((unsigned int)len, numCharCountBits(), QRCODE, &bitLen);
-    for (int j = 0; j < len*8; j++) {
-        int bit = (data[j >> 3] >> (7 - (j & 7))) & 1;
-        appendBitsToBuffer((unsigned int)bit, 1, QRCODE, &bitLen);
-    }
+
+    EMU_printf("bitlen=%d\n", (int16_t)bitLen);
+    EMU_BREAKPOINT;
+    // Append incoming data as bytes instead of 1 bit at a time, about 12x faster
+    appendByteBitsToBuffer(data, QRCODE + (bitLen/8), len, &bitLen);
+    // for (int j = 0; j < len*8; j++) {
+    //     int bit = (data[j >> 3] >> (7 - (j & 7))) & 1;
+    //     appendBitsToBuffer((unsigned int)bit, 1, QRCODE, &bitLen);
+    // }
+    EMU_printf("After %d bytes Data Appended -> bitlen=%d\n", (uint16_t)len, (int16_t)bitLen);
+    EMU_BREAKPOINT;
 	
 	// Add terminator and pad up to a byte if applicable
 	appendBitsToBuffer(0, 4, QRCODE, &bitLen);
