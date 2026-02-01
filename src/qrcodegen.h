@@ -58,6 +58,9 @@ BANKREF_EXTERN(qrcodegen)
 
 // USING_MODULE(qrcodegen, PAGE_D);
 
+// For faster external direct access rendering
+extern uint8_t QRCODE[];
+extern const uint8_t qr_bitmask[];
 
 // uint8_t *qrcodegen(const char *text);
 uint8_t *qrcodegen(const char *text, uint16_t len);

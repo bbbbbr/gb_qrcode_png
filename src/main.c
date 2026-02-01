@@ -7,6 +7,43 @@
 #include "img_2_qrcode.h"
 #include "draw.h"
 
+const palette_color_t QR_PAL_CGB[]  = {RGB(31, 31, 31), RGB(0,0,0),    RGB(0,0,0),    RGB(0,0,0)};
+const palette_color_t DEF_PAL_CGB[] = {RGB(31, 31, 31), RGB(21,21,21),   RGB(10,10,10),   RGB(0,0,0)};
+
+const uint8_t QR_PAL_DMG  = DMG_PALETTE(DMG_WHITE, DMG_BLACK,     DMG_BLACK,     DMG_BLACK);
+const uint8_t DEF_PAL_DMG = DMG_PALETTE(DMG_WHITE, DMG_LITE_GRAY, DMG_DARK_GRAY, DMG_BLACK);
+
+void make_and_show_qrcode(void);
+
+
+void make_and_show_qrcode(void) {
+
+    drawing_save_to_sram(SRAM_BANK_1);
+
+    if (_cpu == CGB_TYPE)  set_bkg_palette(0u, 1u, QR_PAL_CGB);
+    else                   BGP_REG = QR_PAL_DMG;
+
+        image_to_png_qrcode_url();
+
+        // Much more efficient than making a white border by shifting the tile-aligned QRCode output
+        scroll_bkg(-1,-1);
+
+        // Wait for the user to press a button before clearing QRCode
+        waitpadticked_lowcpu(J_ANY);
+        waitpadup();
+
+        scroll_bkg(1,1);
+
+    if (_cpu == CGB_TYPE)  set_bkg_palette(0u, 1u, DEF_PAL_CGB);
+    else                   BGP_REG = DEF_PAL_DMG;
+
+    drawing_restore_from_sram(SRAM_BANK_1);
+    drawing_restore_default_colors();
+
+    // redraw_workarea();
+    SHOW_SPRITES;
+}
+
 
 void main(void)
 {
@@ -32,18 +69,7 @@ void main(void)
         draw_update();
 
         if (KEYS() & J_START) {
-            // TODO: Save the drawing (VRAM) to cart SRAM and then restore it after QRcode is done
-            drawing_save_to_sram(SRAM_BANK_1);
-            image_to_png_qrcode_url();
-
-            // Wait for the user to press a button before clearing QRCode
-            waitpadticked_lowcpu(J_ANY);
-            waitpadup();
-
-            drawing_restore_from_sram(SRAM_BANK_1);
-            drawing_restore_default_colors();
-            // redraw_workarea();
-            SHOW_SPRITES;
+            make_and_show_qrcode();
         }
 
         vsync();
