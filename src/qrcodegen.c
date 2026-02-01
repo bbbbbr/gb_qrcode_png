@@ -568,10 +568,125 @@ static void drawFormatBits(void) {
 
 
 
+// Standard versions:
+//   _drawCodewords          11398278    1
+//   _drawCodewordsLR        5897382    34
+//   _drawCodewordsRL        5334832    35
+//           Self Time       163538      1   
+//
+// Faster versions:
+//   _drawCodewords          5054768     1
+//   _drawCodewordsLR_faster 2562032    34
+//   _drawCodewordsRL_faster 2417040    35
+//   Self Time               74610       1   
 
 /*---- Drawing data modules and masking ----*/
 static uint16_t dc_i;
 
+const uint8_t tmpbuffer_bitmasks[] = {0x80u, 0x40u, 0x20u, 0x10u, 0x08u, 0x04u, 0x02u, 0x01u };
+
+// New versions, about 2x faster
+//
+// Scans the output qrcode on one Y line from checking if it has bit/modules/pixel == 0 (for X and X-1),
+// if it checks the current bit in TMPBUFFER (and advances it) for whether to set the current bit/module/pixel
+//
+// Dir: Top to Bottom
+static void drawCodewordsLR_faster(uint8_t x) {
+
+    uint8_t y = 0;
+
+    // Set up the pointers
+    const uint8_t * p_TMPBUFFER    = TMPBUFFER + (dc_i >> 3);
+          uint8_t   tmpbuffer_mask = tmpbuffer_bitmasks[dc_i & 0x07];
+
+          uint8_t * p_QRCODE        = QRCODE + (y * QR_OUTPUT_ROW_SZ_BYTES) + (x       >> 3);
+          uint8_t * p_QRCODE_xmin_1 = QRCODE + (y * QR_OUTPUT_ROW_SZ_BYTES) + ((x - 1) >> 3);
+          const uint8_t   qrcode_pxmodule_mask        = qr_bitmask[x];;
+          const uint8_t   qrcode_pxmodule_mask_xmin_1 = qr_bitmask[x - 1];;
+
+    // Step through all Y lines in output at current X position 
+    while (y < QRSIZE) {
+        // Check bit corresponding to X,Y module/pixel position in output
+        if (!(*p_QRCODE & qrcode_pxmodule_mask)) {
+
+            // Set or clear X,Y output if bit set or not at current TMPBUFFER index
+            if (*p_TMPBUFFER & tmpbuffer_mask)  *p_QRCODE |=  qrcode_pxmodule_mask; // Set bit
+            else                                *p_QRCODE &= ~qrcode_pxmodule_mask; // Clear bit
+
+            // Increment what seems to be a bit index into TMPBUFFER
+            dc_i++;
+            // Increment TMPBUFFER pointer when crossing bit boundary to next byte
+            if ((dc_i & 0x7u) == 0) p_TMPBUFFER++;
+            // Rotate the mask to keep it bit aligned
+            tmpbuffer_mask >>= 1;
+            if (tmpbuffer_mask == 0) tmpbuffer_mask = 0x80u;
+        }
+        if (!(*p_QRCODE_xmin_1 & qrcode_pxmodule_mask_xmin_1)) {
+
+            if (*p_TMPBUFFER & tmpbuffer_mask)  *p_QRCODE_xmin_1 |=  qrcode_pxmodule_mask_xmin_1; // Set bit
+            else                                *p_QRCODE_xmin_1 &= ~qrcode_pxmodule_mask_xmin_1; // Clear bit
+
+            // Increment what seems to be a bit index into TMPBUFFER
+            dc_i++;
+            if ((dc_i & 0x7u) == 0) p_TMPBUFFER++;
+            tmpbuffer_mask >>= 1;
+            if (tmpbuffer_mask == 0) tmpbuffer_mask = 0x80u;
+        }
+        y++;
+        p_QRCODE += QR_OUTPUT_ROW_SZ_BYTES;  // Move down 1 line in output qrcode buffer
+        p_QRCODE_xmin_1 += QR_OUTPUT_ROW_SZ_BYTES;
+    }
+}
+
+// Same as above, but stepping Y from BOTTOM up to TOP
+static void drawCodewordsRL_faster(uint8_t x) {
+
+    uint8_t y = QRSIZE - 1;
+
+    // Set up the pointers
+    const uint8_t * p_TMPBUFFER    = TMPBUFFER + (dc_i >> 3);
+          uint8_t   tmpbuffer_mask = tmpbuffer_bitmasks[dc_i & 0x07];
+
+          uint8_t * p_QRCODE        = QRCODE + (y * QR_OUTPUT_ROW_SZ_BYTES) + (x       >> 3);
+          uint8_t * p_QRCODE_xmin_1 = QRCODE + (y * QR_OUTPUT_ROW_SZ_BYTES) + ((x - 1) >> 3);
+          const uint8_t   qrcode_pxmodule_mask        = qr_bitmask[x];;
+          const uint8_t   qrcode_pxmodule_mask_xmin_1 = qr_bitmask[x - 1];;
+
+    // Step through all Y lines in output at current X position 
+    do {
+        // Check bit corresponding to X,Y module/pixel position in output
+        if (!(*p_QRCODE & qrcode_pxmodule_mask)) {
+
+            // Set or clear X,Y output if bit set or not at current TMPBUFFER index
+            if (*p_TMPBUFFER & tmpbuffer_mask)  *p_QRCODE |=  qrcode_pxmodule_mask; // Set bit
+            else                                *p_QRCODE &= ~qrcode_pxmodule_mask; // Clear bit
+
+            // Increment what seems to be a bit index into TMPBUFFER
+            dc_i++;
+            // Increment TMPBUFFER pointer when crossing bit boundary to next byte
+            if ((dc_i & 0x7u) == 0) p_TMPBUFFER++;
+            // Rotate the mask to keep it bit aligned
+            tmpbuffer_mask >>= 1;
+            if (tmpbuffer_mask == 0) tmpbuffer_mask = 0x80u;
+        }
+        if (!(*p_QRCODE_xmin_1 & qrcode_pxmodule_mask_xmin_1)) {
+
+            if (*p_TMPBUFFER & tmpbuffer_mask)  *p_QRCODE_xmin_1 |=  qrcode_pxmodule_mask_xmin_1; // Set bit
+            else                                *p_QRCODE_xmin_1 &= ~qrcode_pxmodule_mask_xmin_1; // Clear bit
+
+            // Increment what seems to be a bit index into TMPBUFFER
+            dc_i++;
+            if ((dc_i & 0x7u) == 0) p_TMPBUFFER++;
+            tmpbuffer_mask >>= 1;
+            if (tmpbuffer_mask == 0) tmpbuffer_mask = 0x80u;
+        }
+        // y--;  // Has to be below in order to complete loop with value as 0
+        p_QRCODE -= QR_OUTPUT_ROW_SZ_BYTES;  // Move down 1 line in output qrcode buffer
+        p_QRCODE_xmin_1 -= QR_OUTPUT_ROW_SZ_BYTES;
+    } while (y--);
+}
+
+// Standard Versions (about 2x slower)
 static void drawCodewordsLR(uint8_t x) {
     uint8_t y=0;
     while (y<QRSIZE) {
@@ -602,31 +717,38 @@ static void drawCodewordsRL(uint8_t x) {
     }
 }
 
+
 static void drawCodewords(void) {
     
-    dc_i=0;
+    dc_i=0;  // Seems to be bit index of incoming data in TMPBUFFER
     
     uint8_t x=QRSIZE-1;
 
-    drawCodewordsRL(x);
+    drawCodewordsRL_faster(x);
+    // drawCodewordsRL(x);
     x-=2;
     
     while(x>7) {
 
-        drawCodewordsLR(x);
+        drawCodewordsLR_faster(x);
+        // drawCodewordsLR(x);
         x-=2;
-        drawCodewordsRL(x);
+        drawCodewordsRL_faster(x);
+        // drawCodewordsRL(x);
         x-=2;
     }
     x = 5;
 
-    drawCodewordsLR(x);
+    drawCodewordsLR_faster(x);
+    // drawCodewordsLR(x);
     x-=2;
 
-    drawCodewordsRL(x);
+    drawCodewordsRL_faster(x);
+    // drawCodewordsRL(x);
     x-=2;
 
-    drawCodewordsLR(x);
+    drawCodewordsLR_faster(x);
+    // drawCodewordsLR(x);
 }
 
 static void applyMask0(void) {
@@ -745,7 +867,7 @@ uint8_t *qrcodegen(const char *text, uint16_t len) BANKED {
     appendBitsToBuffer((unsigned int)len, numCharCountBits(), QRCODE, &bitLen);
 
     EMU_printf("bitlen=%d\n", (int16_t)bitLen);
-    EMU_BREAKPOINT;
+    // EMU_BREAKPOINT;
     // Append incoming data as bytes instead of 1 bit at a time, about 12x faster
     appendByteBitsToBuffer(data, QRCODE + (bitLen/8), len, &bitLen);
     // for (int j = 0; j < len*8; j++) {
@@ -753,7 +875,7 @@ uint8_t *qrcodegen(const char *text, uint16_t len) BANKED {
     //     appendBitsToBuffer((unsigned int)bit, 1, QRCODE, &bitLen);
     // }
     EMU_printf("After %d bytes Data Appended -> bitlen=%d\n", (uint16_t)len, (int16_t)bitLen);
-    EMU_BREAKPOINT;
+    // EMU_BREAKPOINT;
 	
 	// Add terminator and pad up to a byte if applicable
 	appendBitsToBuffer(0, 4, QRCODE, &bitLen);
