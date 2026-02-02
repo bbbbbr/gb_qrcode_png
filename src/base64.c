@@ -61,7 +61,10 @@ uint16_t base64_encode_to_url(uint8_t * p_dest, const uint8_t * p_src, uint16_t 
 
     // Append string null terminator
     p_dest[out_len] = '\0';
-    out_len++;
+    // NOTE: Keeping the null terminator, but removing the length adjustment since:
+    // - It doesn't seem necessary
+    // - Causes some qrcode apps to share with <NUL> at the end which messes up the URL for the browser
+    // out_len++;
 
     // EMU_printf(".2 B64 sz=%u\n", (uint16_t)out_len);
 
