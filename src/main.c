@@ -18,7 +18,7 @@ void make_and_show_qrcode(void);
 
 void make_and_show_qrcode(void) {
 
-    drawing_save_to_sram(SRAM_BANK_1);
+    drawing_save_to_sram(SRAM_BANK_CUR_DRAWING_CACHE, DRAWING_SAVE_SLOT_MIN);
 
 
     image_to_png_qrcode_url();
@@ -38,7 +38,8 @@ void make_and_show_qrcode(void) {
     if (_cpu == CGB_TYPE)  set_bkg_palette(0u, 1u, DEF_PAL_CGB);
     else                   BGP_REG = DEF_PAL_DMG;
 
-    drawing_restore_from_sram(SRAM_BANK_1);
+    redraw_workarea();
+    drawing_restore_from_sram(SRAM_BANK_CUR_DRAWING_CACHE, DRAWING_SAVE_SLOT_MIN);
     drawing_restore_default_colors();
 
     // redraw_workarea();
@@ -49,7 +50,7 @@ void make_and_show_qrcode(void) {
 void main(void)
 {
     ENABLE_RAM;
-    SWITCH_RAM(0u); // RAM bank 0
+    SWITCH_RAM(SRAM_BANK_CALC_BUFFER); // RAM bank 0
 
     if (_cpu == CGB_TYPE) {
         cpu_fast();

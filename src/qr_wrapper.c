@@ -124,10 +124,11 @@ static void qr_render_scale_1_1bpp_direct(void) {
 
     // Start at first tile in vram
     // APA mode layout is 20 tiles wide x 18 tiles tall, starting at 0x8100
-    uint8_t * p_vram = 0x8100 + (((QR_TILE_Y_START * DEVICE_SCREEN_WIDTH) + QR_TILE_X_START) * TILE_SZ_BYTES);
+    // Offset to the starting tile of where to draw the QRCode
+    uint8_t * p_vram = APA_MODE_VRAM_START + (((QR_TILE_Y_START * DEVICE_SCREEN_WIDTH) + QR_TILE_X_START) * TILE_SZ_BYTES);
 
     // Clear VRAM, this render will only be writing very other byte due to 1bpp source format
-    memset(_VRAM8000 + 0x100u, 0u, (_SCRN0 - _VRAM8000) - 0x100u);
+    memset(APA_MODE_VRAM_START, 0u, APA_MODE_VRAM_SZ);
 
     // Calculate a tile mask to fix up stray pixels on the right edge of the QRcode when it's width isn't an even multiple of 8 (tile width)
     const uint8_t right_edge_tile_row_mask = ~((1u << (8u - (QRSIZE % 8u))) - 1u);

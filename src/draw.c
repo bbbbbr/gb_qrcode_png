@@ -30,22 +30,62 @@ static const unsigned char mouse_cursors[] = {
   0xFE, 0xA2, 0xFE, 0x82, 0x7E, 0x42, 0x3E, 0x3E
 };
 
+#define DRAWING_ROW_OF_TILES_SZ   (IMG_WIDTH_TILES * TILE_SZ_BYTES)
+#define SCREEN_ROW_SZ             (DEVICE_SCREEN_WIDTH * TILE_SZ_BYTES)
+#define DRAWING_SAVE_SLOT_SIZE    (IMG_WIDTH_TILES * IMG_HEIGHT_TILES * TILE_SZ_BYTES)
+#define DRAWING_VRAM_START        (APA_MODE_VRAM_START + (((IMG_TILE_Y_START * DEVICE_SCREEN_WIDTH) + IMG_TILE_X_START) * TILE_SZ_BYTES))
 
-void drawing_save_to_sram(uint8_t sram_bank) BANKED {
+
+static void test_load_save(void);
+
+
+void drawing_save_to_sram(uint8_t sram_bank, uint8_t save_slot) BANKED {
 
     SWITCH_RAM(sram_bank);
     DISPLAY_OFF;
-    vmemcpy((uint8_t *)SRAM_BASE_A000, (uint8_t *)_VRAM8000, _SCRN0 - _VRAM8000); // Copy all tile patterns
+    uint8_t * p_sram_save_slot = (uint8_t *)(SRAM_BASE_A000 + (DRAWING_SAVE_SLOT_SIZE * save_slot));
+    uint8_t * p_vram_drawing   = (uint8_t *)(DRAWING_VRAM_START);
+
+    for (uint8_t tile_row = 0u; tile_row < IMG_HEIGHT_TILES; tile_row++) {
+        vmemcpy(p_sram_save_slot, p_vram_drawing, DRAWING_ROW_OF_TILES_SZ); // Copy all tile patterns
+        p_sram_save_slot += DRAWING_ROW_OF_TILES_SZ;
+        p_vram_drawing   += SCREEN_ROW_SZ;
+    }
     DISPLAY_ON;
 }
 
-void drawing_restore_from_sram(uint8_t sram_bank) BANKED {
+void drawing_restore_from_sram(uint8_t sram_bank, uint8_t save_slot) BANKED {
 
     SWITCH_RAM(sram_bank);
     DISPLAY_OFF;
-    vmemcpy((uint8_t *)_VRAM8000, (uint8_t *)SRAM_BASE_A000, _SCRN0 - _VRAM8000); // Copy all tile patterns
+    uint8_t * p_sram_save_slot = (uint8_t *)(SRAM_BASE_A000 + (DRAWING_SAVE_SLOT_SIZE * save_slot));
+    uint8_t * p_vram_drawing   = (uint8_t *)(DRAWING_VRAM_START);
+
+    for (uint8_t tile_row = 0u; tile_row < IMG_HEIGHT_TILES; tile_row++) {
+        vmemcpy(p_vram_drawing, p_sram_save_slot, DRAWING_ROW_OF_TILES_SZ); // Copy all tile patterns
+        p_sram_save_slot += DRAWING_ROW_OF_TILES_SZ;
+        p_vram_drawing   += SCREEN_ROW_SZ;
+    }
     DISPLAY_ON;
+
 }
+
+
+// TODO: For testing, not final Controls UI
+static void test_load_save(void) {
+    
+    switch (GET_KEYS_TICKED(~J_SELECT)) {
+        case J_UP:   if (save_slot_current > DRAWING_SAVE_SLOT_MIN) save_slot_current--;
+            break;
+        case J_DOWN: if (save_slot_current < DRAWING_SAVE_SLOT_MAX) save_slot_current++;
+            break;
+        case J_A:    drawing_restore_from_sram(SRAM_BANK_DRAWING_SAVES, save_slot_current);
+            break;
+        case J_B:    drawing_save_to_sram(SRAM_BANK_DRAWING_SAVES, save_slot_current);
+            break;
+    }
+}
+
 
 // Draws the paint working area
 void drawing_restore_default_colors(void) BANKED {
@@ -55,7 +95,7 @@ void drawing_restore_default_colors(void) BANKED {
 
 // Draws the paint working area
 // void redraw_workarea(void) NONBANKED {
-void redraw_workarea(void) NONBANKED BANKED {
+void redraw_workarea(void) NONBANKED {
 
     DISPLAY_OFF;
 
@@ -72,7 +112,8 @@ void redraw_workarea(void) NONBANKED BANKED {
         SWITCH_ROM(save_bank);
     }
 
-/*
+    /*
+    // TODO: Removable. Old style of rendering drawing vs border area
     // Fill screen with black
     color(BLACK, BLACK, SOLID);
     box(0u, 0u, DEVICE_SCREEN_PX_WIDTH - 1u, DEVICE_SCREEN_PX_HEIGHT - 1u, M_FILL);
@@ -80,7 +121,7 @@ void redraw_workarea(void) NONBANKED BANKED {
     // Fill active image area in white
     color(WHITE, WHITE, SOLID);
     box(IMG_X_START, IMG_Y_START, IMG_X_END, IMG_Y_END, M_FILL);
-*/
+    */
     // For pixel drawing
     color(BLACK,WHITE,SOLID);
 
@@ -113,6 +154,11 @@ void draw_init(void) BANKED {
 
 // Expects UPDATE_KEYS() to have been called before each invocation
 void draw_update(void) BANKED {
+
+    if (KEY_PRESSED(J_SELECT)) {
+        test_load_save();
+        return;
+    }
 
     static uint8_t last_cursor_x = CURSOR_POS_UNSET;
     static uint8_t last_cursor_y = CURSOR_POS_UNSET;

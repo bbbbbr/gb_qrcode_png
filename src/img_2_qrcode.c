@@ -58,7 +58,7 @@ static uint16_t copy_1bpp_image_from_vram(uint8_t * p_out_buf) {
 
     // Start at first tile in vram
     // APA mode layout is 20 tiles wide x 18 tiles tall, starting at 0x8100
-    uint8_t *   p_vram                  = 0x8100 + (((IMG_TILE_Y_START * DEVICE_SCREEN_WIDTH) + IMG_TILE_X_START) * TILE_SZ_BYTES);
+    uint8_t *   p_vram = APA_MODE_VRAM_START + (((IMG_TILE_Y_START * DEVICE_SCREEN_WIDTH) + IMG_TILE_X_START) * TILE_SZ_BYTES);
 
     // The -2 is to rewind but then step down to the next 2bpp row in the tile
     const uint16_t next_line_row_rewind = (IMG_WIDTH_TILES * TILE_SZ_BYTES) - 2u;
@@ -100,7 +100,7 @@ static uint16_t copy_1bpp_image_from_vram(uint8_t * p_out_buf) {
 
 void image_to_png_qrcode_url(void) BANKED {
 
-    SWITCH_RAM(SRAM_BANK_0);
+    SWITCH_RAM(SRAM_BANK_CALC_BUFFER);
 
     // Output buffers in Cart SRAM, no need to allocate them
     uint8_t * p_img_1bpp_buf       = (uint8_t *)SRAM_UPPER_B000; // Gets overwritten by Base64 encoded image
