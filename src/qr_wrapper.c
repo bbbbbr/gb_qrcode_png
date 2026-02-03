@@ -101,7 +101,7 @@ const uint8_t mirror_bits[256] = {
 };
 
 
-#define QR_TILE_X_START  0u
+#define QR_TILE_X_START  1u
 #define QR_TILE_Y_START  0u
 
 #define QR_WIDTH_TILES      ((QRSIZE + (TILE_SZ_PX - 1u)) / TILE_SZ_PX)
