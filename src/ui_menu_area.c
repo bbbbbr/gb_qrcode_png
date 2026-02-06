@@ -64,6 +64,11 @@ void ui_handle_menu_area(uint8_t cursor_8u_x, uint8_t cursor_8u_y) BANKED {
 
     // TODO: OPTIMIZE: instead of dispatching on every cursor move, only dispatch to menus on button press?
 
+    // TODO: Sort of a hack, but cancel any pending tool operations if a button is pressed in the menu area
+    if (KEY_TICKED(UI_ACTION_BUTTON)) {
+        draw_tools_cancel_and_reset();
+    }
+
     // Tools Menu
     if ((cursor_8u_x >= TOOLS_MENU_X_START) && (cursor_8u_x < TOOLS_MENU_X_END) &&
         (cursor_8u_y >= TOOLS_MENU_Y_START) && (cursor_8u_y < TOOLS_MENU_Y_END)) {

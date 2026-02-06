@@ -20,10 +20,11 @@
 
 static void draw_tool_pencil(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
+static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 
-static uint8_t tool_line_start_x, tool_line_start_y;
-static bool    line_tool_currently_drawing = false;
-
+static uint8_t tool_start_x, tool_start_y;
+static bool    tool_currently_drawing = false;
+static bool    tool_fillstyle = M_NOFILL;
 
 // TODO: REORG: split sram load and save out to to new file: file_loadsave.c
 void drawing_save_to_sram(uint8_t sram_bank, uint8_t save_slot) BANKED {
@@ -109,7 +110,7 @@ void draw_update(uint8_t cursor_8u_x, uint8_t cursor_8u_y) BANKED {
             break;
         case DRAW_TOOL_ERASER:
             break;
-        case DRAW_TOOL_RECT:
+        case DRAW_TOOL_RECT:  draw_tool_rect(cursor_8u_x,cursor_8u_y);
             break;
         case DRAW_TOOL_CIRCLE:
             break;
@@ -129,12 +130,12 @@ void draw_tools_cancel_and_reset(void) BANKED {  // TODO
     // Clear any reservation on the B button
     app_state.draw_tool_using_b_button_action = false;
 
-    line_tool_currently_drawing = false;
+    tool_currently_drawing = false;
 
     // switch (app_state.drawing_tool) {
     //     case DRAW_TOOL_PENCIL: // Nothing to reset for pencil
     //         break;
-    //     case DRAW_TOOL_LINE: line_tool_currently_drawing = false; // Undraw any pending lines
+    //     case DRAW_TOOL_LINE: tool_currently_drawing = false; // Undraw any pending lines
     //         break;
     //     case DRAW_TOOL_ERASER:
     //         break;
@@ -158,19 +159,19 @@ static void draw_tool_pencil(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
 static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
-    if (line_tool_currently_drawing == false) {
+    if (tool_currently_drawing == false) {
 
         // Start drawing a line
         if (KEY_TICKED(DRAW_MAIN_BUTTON)) {
-            tool_line_start_x = cursor_8u_x;
-            tool_line_start_y = cursor_8u_y;
-            // Draw the first line (1 pixel) XOR style so it can be undrawn
+            tool_start_x = cursor_8u_x;
+            tool_start_y = cursor_8u_y;
+            // Draw the first line(1 pixel) XOR style so it can be undrawn
             color(BLACK,WHITE,XOR);
-            line (tool_line_start_x, tool_line_start_y, cursor_8u_x, cursor_8u_y);
+            line(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y);
 
             // Set line starting point
             app_state.draw_tool_using_b_button_action = true;
-            line_tool_currently_drawing = true;
+            tool_currently_drawing = true;
         }
 
     } else {
@@ -181,7 +182,7 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         bool new_line_position = false;
         if ((cursor_8u_x != app_state.draw_cursor_8u_last_x) || (cursor_8u_y !=app_state.draw_cursor_8u_last_y)) {
             color(BLACK,WHITE,XOR);
-            line (tool_line_start_x, tool_line_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
+            line(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
             new_line_position = true;
         }
 
@@ -189,12 +190,12 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         if (KEY_TICKED(DRAW_MAIN_BUTTON)) {
             // Finalize the line
             drawing_restore_default_colors();
-            line (tool_line_start_x, tool_line_start_y, cursor_8u_x, cursor_8u_y);
+            line(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y);
 
             // Finalizing the line doesn't end line drawing, instead
             // it begins a new line at the current position
-            tool_line_start_x = cursor_8u_x;
-            tool_line_start_y = cursor_8u_y;
+            tool_start_x = cursor_8u_x;
+            tool_start_y = cursor_8u_y;
         }
         else {
             // Otherwise the Line is still being actively drawn
@@ -203,22 +204,76 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
             if (KEY_TICKED(DRAW_CANCEL_BUTTON)) {
 
                 // Cancel all line drawing
-                line_tool_currently_drawing = false;
+                tool_currently_drawing = false;
                 app_state.draw_tool_using_b_button_action = false;
 
                 // If it's the same position as before then need to undraw the line to cancel
                 if (!new_line_position) {
                     color(BLACK,WHITE,XOR);
-                    line (tool_line_start_x, tool_line_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
+                    line(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
                 }
             }
             else {
-                // Otherwise, if mvoed, update the line preview to the new position
+                // Otherwise, if moved, update the line preview to the new position
                 if (new_line_position) {
                     // Again, XOR draw so it can be un-drawn later
                     color(BLACK,WHITE,XOR);
-                    line (tool_line_start_x, tool_line_start_y, cursor_8u_x, cursor_8u_y);
+                    line(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y);
                 }
+            }
+        }
+
+        drawing_restore_default_colors();
+    }
+}
+
+
+static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
+
+    if (tool_currently_drawing == false) {
+
+        // Start drawing a rect
+        if (KEY_TICKED(DRAW_MAIN_BUTTON)) {
+            tool_start_x = cursor_8u_x;
+            tool_start_y = cursor_8u_y;
+            // Draw the first rect(1 pixel) XOR style so it can be undrawn
+            color(BLACK,WHITE,XOR);
+            box(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y, tool_fillstyle);
+
+            // Set rect starting point
+            app_state.draw_tool_using_b_button_action = true;
+            tool_currently_drawing = true;
+        }
+
+    } else {
+        // rect drawing is active, currently previewing position
+
+        // Un-draw the rect from the last frame (XOR)
+        // But only if the cursor moved, so that it remains visible otherwise
+        bool new_line_position = false;
+        if ((cursor_8u_x != app_state.draw_cursor_8u_last_x) || (cursor_8u_y !=app_state.draw_cursor_8u_last_y)) {
+            color(BLACK,WHITE,XOR);
+            box(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y, tool_fillstyle);
+            new_line_position = true;
+        }
+
+        // If finalizing the rect is requested, draw it normally
+        if (KEY_TICKED(DRAW_MAIN_BUTTON)) {
+            // Finalize the rect
+            drawing_restore_default_colors();
+            box(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y, tool_fillstyle);
+
+            app_state.draw_tool_using_b_button_action = false;
+            tool_currently_drawing = false;
+        }
+        else {
+            // Otherwise the rect is still being actively drawn
+
+            // If moved, update the line preview to the new position
+            if (new_line_position) {
+                // Again, XOR draw so it can be un-drawn later
+                color(BLACK,WHITE,XOR);
+                box(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y, tool_fillstyle);
             }
         }
 
