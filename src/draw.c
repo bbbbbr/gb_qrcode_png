@@ -18,8 +18,7 @@
 #define DRAWING_VRAM_START        (APA_MODE_VRAM_START + (((IMG_TILE_Y_START * DEVICE_SCREEN_WIDTH) + IMG_TILE_X_START) * TILE_SZ_BYTES))
 
 
-static void test_load_save(void);
-
+static void draw_tool_pencil(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 
 
 // TODO: REORG: split sram load and save out to to new file: file_loadsave.c
@@ -57,7 +56,7 @@ void drawing_restore_from_sram(uint8_t sram_bank, uint8_t save_slot) BANKED {
 
 // // TODO: For testing, not final Controls UI
 // static void test_load_save(void) {
-//    
+//
 //     switch (GET_KEYS_TICKED(~J_SELECT)) {
 //         case J_UP:   if (app_state.save_slot_current > DRAWING_SAVE_SLOT_MIN) app_state.save_slot_current--;
 //             break;
@@ -74,7 +73,7 @@ void drawing_restore_from_sram(uint8_t sram_bank, uint8_t save_slot) BANKED {
 // Draws the paint working area
 void drawing_restore_default_colors(void) BANKED {
     // For pixel drawing
-    color(BLACK,WHITE,SOLID);    
+    color(BLACK,WHITE,SOLID);
 }
 
 
@@ -99,41 +98,30 @@ void draw_update(uint8_t cursor_8u_x, uint8_t cursor_8u_y) BANKED {
 
     if (KEY_TICKED(J_SELECT)) ui_cycle_cursor_speed();
 
-    // TODO: handle tool types
-    // switch (app_state.drawing_tool) {
-    //     case DRAW_TOOL_PENCIL:
-    //         break;
-    //     case DRAW_TOOL_LINE:
-    //         break;
-    //     case DRAW_TOOL_ERASER:
-    //         break;
-    //     case DRAW_TOOL_RECT:
-    //         break;
-    //     case DRAW_TOOL_CIRCLE:
-    //         break;
-    //     case DRAW_TOOL_FLOODFILL:
-    //         break;
-    // }        
-
-    switch (KEYS() & (J_A | J_B)) {
-        // case (J_A | J_B):
-            // Clear the screen and reset some things
-        case J_A: plot_point(cursor_8u_x, cursor_8u_y);
-                  app_state.draw_cursor_8u_last_x = cursor_8u_x;
-                  app_state.draw_cursor_8u_last_y = cursor_8u_y;
+    switch (app_state.drawing_tool) {
+        case DRAW_TOOL_PENCIL: draw_tool_pencil(cursor_8u_x,cursor_8u_y);
             break;
-
-        case J_B:
-                    // // if (app_state.draw_cursor_8u_last_x != CURSOR_POS_UNSET_8U) {
-                    // //     line(app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y, cursor_8u_x, cursor_8u_y);
-                    // // }
-                    // app_state.draw_cursor_8u_last_x = cursor_8u_x;
-                    // app_state.draw_cursor_8u_last_y = cursor_8u_y;
+        case DRAW_TOOL_LINE:
             break;
-
-
-        default: // no buttons pressed
-            // app_state.buttons_up_pending = false;
+        case DRAW_TOOL_ERASER:
+            break;
+        case DRAW_TOOL_RECT:
+            break;
+        case DRAW_TOOL_CIRCLE:
+            break;
+        case DRAW_TOOL_FLOODFILL:
             break;
     }
 }
+
+
+static void draw_tool_pencil(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
+
+    if (KEY_PRESSED(DRAW_MAIN_BUTTON)) {
+        plot_point(cursor_8u_x, cursor_8u_y);
+
+        app_state.draw_cursor_8u_last_x = cursor_8u_x;  // TODO: Night be ok to remove these vars
+        app_state.draw_cursor_8u_last_y = cursor_8u_y;
+    }
+}
+

@@ -7,6 +7,7 @@
 
 
 #define UI_ACTION_BUTTON            (J_A)
+#define DRAW_MAIN_BUTTON            (J_A)
 
 #define ALL_MENUS_BG_COLOR          (LTGREY)
 
