@@ -22,9 +22,9 @@
 #define SRAM_BANK_2   2u
 #define SRAM_BANK_3   3u
 
-#define SRAM_BANK_CUR_DRAWING_CACHE  (SRAM_BANK_0)
+#define SRAM_BANK_CALC_BUFFER        (SRAM_BANK_0)  // Keep [PNG / Base64] Calc buffer in first SRAM bank so that image apps can detect it as PNG format
 #define SRAM_BANK_DRAWING_SAVES      (SRAM_BANK_1)
-#define SRAM_BANK_CALC_BUFFER        (SRAM_BANK_2)
+#define SRAM_BANK_CUR_DRAWING_CACHE  (SRAM_BANK_2)
 
 // Current QRCode sizing estimates
 // - 1bpp Image Max = 1282 - 6  palette (@ 2 col) = 1276 Bytes * 8 pixels per byte = 10208 Pixels -> fits: 104 x 96[tiles:13x12] = 9984
