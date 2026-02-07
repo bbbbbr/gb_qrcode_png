@@ -26,11 +26,21 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static void draw_tool_circle(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static void draw_tool_eraser(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
+static void draw_tool_floodfill(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 
+static bool flood_queue_push(int8_t x1, int8_t x2, int8_t y1, int8_t y2);
+static bool flood_check_fillable(uint8_t x, uint8_t y);
 
 static uint8_t tool_start_x, tool_start_y;
 static bool    tool_currently_drawing = false;
 static bool    tool_fillstyle = M_NOFILL;
+
+// For Flood-fill
+static int8_t * p_flood_queue = (int8_t *)SRAM_UPPER_B000; // Flood-fill Queue temp buffer is in SRAM shared with other uses
+static uint16_t flood_queue_count = 0u;
+#define FLOOD_QUEUE_ENTRY_SIZE 4u  // Four bytes per flood-fill queue entry
+#define FILL_OUT_OF_MEMORY false
+
 
 // TODO: REORG: split sram load and save out to to new file: file_loadsave.c
 void drawing_save_to_sram(uint8_t sram_bank, uint8_t save_slot) BANKED {
@@ -120,7 +130,7 @@ void draw_update(uint8_t cursor_8u_x, uint8_t cursor_8u_y) BANKED {
             break;
         case DRAW_TOOL_CIRCLE: draw_tool_circle(cursor_8u_x,cursor_8u_y);
             break;
-        case DRAW_TOOL_FLOODFILL:
+        case DRAW_TOOL_FLOODFILL: draw_tool_floodfill(cursor_8u_x,cursor_8u_y);
             break;
     }
 
@@ -422,4 +432,88 @@ static void draw_tool_eraser(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
     drawing_restore_default_colors();
 }
 
+
+// uint16_t queue_fill_max;  // For debug measurement
+static bool flood_queue_push(int8_t x1, int8_t x2, int8_t y1, int8_t y2) {
+
+   // Bail if over memory limit
+    if (flood_queue_count >= 0x1000u) {
+        return FILL_OUT_OF_MEMORY;
+    }
+
+    p_flood_queue[flood_queue_count++] = x1;
+    p_flood_queue[flood_queue_count++] = x2;
+    p_flood_queue[flood_queue_count++] = y1;
+    p_flood_queue[flood_queue_count++] = y2;
+
+    //
+    // if (flood_queue_count > queue_fill_max) queue_fill_max = flood_queue_count;
+    return true;
+}
+
+
+static bool flood_check_fillable(uint8_t x, uint8_t y) {
+
+    // EMU_printf(" Check: %hu, %hu\n", (uint8_t)x, (uint8_t)y);
+    if ((x >= IMG_X_START) && (x <= IMG_X_END) &&
+        (y >= IMG_Y_START) && (y <= IMG_Y_END)) {
+        if (getpix(x, y) == WHITE) return true;
+    }
+    return false;
+}
+
+
+// "Combined-scan-and-fill span filler" per Wikipedia
+// Heckbert, Paul S (1990). "IV.10: A Seed Fill Algorithm"
+static void draw_tool_floodfill(uint8_t x, uint8_t y) {
+
+    if (KEY_PRESSED(DRAW_MAIN_BUTTON)) {
+        drawing_restore_default_colors();
+
+        // EMU_printf("Start: %hu, %hu\n", (uint8_t)x, (uint8_t)y);
+
+        // Fill queue temp buffer is in SRAM
+        SWITCH_RAM(SRAM_BANK_CALC_BUFFER);
+
+        if (flood_check_fillable(x,y) == false) return;
+        flood_queue_count = 0u;
+        // queue_fill_max = 0u;
+
+        flood_queue_push(x, x, y,      1);
+        flood_queue_push(x, x, y - 1, -1);
+
+        while (flood_queue_count >= FLOOD_QUEUE_ENTRY_SIZE) {
+
+            // Pop an entry from the queue
+            uint8_t dy = p_flood_queue[--flood_queue_count]; // Last entry in is first out since it was last in (queue is LIFO)
+            uint8_t y  = p_flood_queue[--flood_queue_count];
+            uint8_t x2 = p_flood_queue[--flood_queue_count];
+            uint8_t x1 = p_flood_queue[--flood_queue_count];
+
+            uint8_t x = x1;
+            if (flood_check_fillable(x, y)) {
+                if (flood_check_fillable(x - 1, y)) {
+                    plot_point(x - 1, y);
+                    x = x - 1;
+                }
+                if (x < x1) if (flood_queue_push(x, x1 - 1, y - dy, -dy) == FILL_OUT_OF_MEMORY) return;
+            }
+
+            while (x1 <= x2) {
+                while (flood_check_fillable(x1, y)) {
+                    plot_point(x1, y);
+                    x1 = x1 + 1;
+                }
+                if (x1     >  x) if (flood_queue_push(x, x1 - 1, y + dy, dy) == FILL_OUT_OF_MEMORY) return;
+                if (x1 - 1 > x2) if (flood_queue_push(x2 + 1, x1 - 1, y - dy, -dy) == FILL_OUT_OF_MEMORY) return;
+                x1 = x1 + 1;
+                while ((x1 <= x2) && (flood_check_fillable(x1, y) == false)) {
+                    x1 = x1 + 1;
+                }
+                x = x1;
+            }
+        }
+       // EMU_printf("Fill Queue Max Depth = %u\n", (uint16_t)queue_fill_max);
+    }
+}
 
