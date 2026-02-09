@@ -174,9 +174,9 @@ static void qr_render_scale_1_1bpp_direct(void) {
     // box(QRSIZE, 0, QRSIZE+2, QR_FINAL_PIXEL_HEIGHT, M_FILL);
     //
     // Lil' Hacky
-    // Tile on screen to the right outside of the QRCode at size 31 which we know will be blank
-    // and is in the common "middle" apa tileset in VRAM
-    const uint8_t white_tile_index = 134u;
+    // Tile on screen to the left white border side of the screen outside of the QRCode
+    // at size 31 which should be blank
+    const uint8_t white_tile_index = 16u;
     // Now fix up the -1,-1 screen scroll wraparound border area tiles with the white tile
     fill_bkg_rect(DEVICE_SCREEN_BUFFER_WIDTH - 1u, 0u,  1u,  DEVICE_SCREEN_BUFFER_HEIGHT, white_tile_index);
     fill_bkg_rect(0u,  DEVICE_SCREEN_BUFFER_HEIGHT - 1u,  DEVICE_SCREEN_BUFFER_WIDTH,  1u, white_tile_index);
