@@ -136,6 +136,7 @@ void image_to_png_qrcode_url(void) BANKED {
     // - Ported C implementation doesn't support other modes
     // - Alphanumeric mode character set doesn't include all chars needed for base64 encoded strings and mime header chars (;)
     //
+    color(WHITE, BLACK, SOLID);
     gotogxy(5u,4u);
     gprintf("Generating");
     gotogxy(5u,5u);
