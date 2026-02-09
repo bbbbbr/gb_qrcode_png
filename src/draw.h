@@ -3,7 +3,10 @@
 
 void drawing_save_to_sram(uint8_t sram_bank, uint8_t save_slot) BANKED;
 void drawing_restore_from_sram(uint8_t sram_bank, uint8_t save_slot) BANKED;
-void drawing_restore_default_colors(void) BANKED;
+
+void drawing_set_to_main_colors(void) BANKED;
+void drawing_set_to_alt_colors(void) BANKED;
+
 void drawing_clear(void) BANKED;
 
 void draw_init(void) BANKED;

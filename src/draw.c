@@ -91,26 +91,33 @@ void drawing_restore_from_sram(uint8_t sram_bank, uint8_t save_slot) BANKED {
 // }
 
 
-// Draws the paint working area
-void drawing_restore_default_colors(void) BANKED {
+
+// Foreground drawing colors (border and fill the same)
+void drawing_set_to_main_colors(void) BANKED {
+    color(app_state.draw_color_main, app_state.draw_color_main, SOLID);
+}
+
+
+// Background drawing colors (border and fill the same)
+void drawing_set_to_alt_colors(void) BANKED {
     // For pixel drawing
-    color(BLACK,WHITE,SOLID);
+    color(app_state.draw_color_bg, app_state.draw_color_bg, SOLID);
 }
 
 
 void drawing_clear(void) BANKED {
 
     // Fill active image area in white
-    color(WHITE, WHITE, SOLID);
+    drawing_set_to_alt_colors();
     box(IMG_X_START, IMG_Y_START, IMG_X_END, IMG_Y_END, M_FILL);
 
-    drawing_restore_default_colors();
+    drawing_set_to_main_colors();
 }
 
 void draw_init(void) BANKED {
 
     // Set default brush For pixel drawing
-    color(BLACK,WHITE,SOLID);
+    drawing_set_to_main_colors();
 }
 
 
@@ -148,6 +155,8 @@ void draw_tools_cancel_and_reset(void) BANKED {  // TODO
 
     tool_currently_drawing = false;
 
+    drawing_set_to_main_colors();
+
     // switch (app_state.drawing_tool) {
     //     case DRAW_TOOL_PENCIL: // Nothing to reset for pencil
     //         break;
@@ -181,7 +190,7 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         if (KEY_TICKED(DRAW_MAIN_BUTTON)) {
             tool_start_x = cursor_8u_x;
             tool_start_y = cursor_8u_y;
-            // Draw the first line(1 pixel) XOR style so it can be undrawn
+            // Draw the first line (1 pixel) XOR style so it can be undrawn
             color(BLACK,WHITE,XOR);
             line(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y);
 
@@ -205,7 +214,7 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         // If finalizing the line is requested, draw it normally
         if (KEY_TICKED(DRAW_MAIN_BUTTON)) {
             // Finalize the line
-            drawing_restore_default_colors();
+            drawing_set_to_main_colors();
             line(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y);
 
             // Finalizing the line doesn't end line drawing, instead
@@ -238,8 +247,6 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
                 }
             }
         }
-
-        drawing_restore_default_colors();
     }
 }
 
@@ -276,7 +283,7 @@ static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         // If finalizing the rect is requested, draw it normally
         if (KEY_TICKED(DRAW_MAIN_BUTTON)) {
             // Finalize the rect
-            drawing_restore_default_colors();
+            drawing_set_to_main_colors();
             box(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y, tool_fillstyle);
 
             app_state.draw_tool_using_b_button_action = false;
@@ -307,8 +314,6 @@ static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
                 }
             }
         }
-
-        drawing_restore_default_colors();
     }
 }
 
@@ -380,7 +385,7 @@ static void draw_tool_circle(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         // If finalizing is requested, draw it normally
         if (KEY_TICKED(DRAW_MAIN_BUTTON)) {
             // Finalize
-            drawing_restore_default_colors();
+            drawing_set_to_main_colors();
             circle(tool_start_x, tool_start_y, get_radius(cursor_8u_x, cursor_8u_y), tool_fillstyle);
 
             app_state.draw_tool_using_b_button_action = false;
@@ -411,8 +416,6 @@ static void draw_tool_circle(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
                 }
             }
         }
-
-        drawing_restore_default_colors();
     }
 }
 
@@ -426,14 +429,13 @@ static void draw_tool_eraser(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         if (end_x > IMG_X_END) end_x = IMG_X_END;
         if (end_y > IMG_Y_END) end_y = IMG_Y_END;
 
-        color(WHITE,WHITE,SOLID);
+        drawing_set_to_alt_colors();
         // Work around a bug in GBDK box() where it draws an I-Bar shape instead of line when x1==x2
         if (cursor_8u_x == end_x)
             line(cursor_8u_x, cursor_8u_y, end_x, end_y);
         else
             box(cursor_8u_x, cursor_8u_y, end_x, end_y, M_FILL);
     }
-    drawing_restore_default_colors();
 }
 
 
@@ -461,18 +463,21 @@ static bool flood_check_fillable(uint8_t x, uint8_t y) {
     // EMU_printf(" Check: %hu, %hu\n", (uint8_t)x, (uint8_t)y);
     if ((x >= IMG_X_START) && (x <= IMG_X_END) &&
         (y >= IMG_Y_START) && (y <= IMG_Y_END)) {
-        if (getpix(x, y) == WHITE) return true;
+        if (getpix(x, y) == app_state.draw_color_bg) return true;
     }
     return false;
 }
 
-
+// A lot of the time this spends is waiting for safe VRAM access (get/set pixel).
+// Could turn the screen off to be faster, but it's a lot more fun to watch.
+// Could also copy VRAM to SRAM and work off that, but it's ok enough as is.
+//
 // "Combined-scan-and-fill span filler" per Wikipedia
 // Heckbert, Paul S (1990). "IV.10: A Seed Fill Algorithm"
 static void draw_tool_floodfill(uint8_t x, uint8_t y) {
 
     if (KEY_PRESSED(DRAW_MAIN_BUTTON)) {
-        drawing_restore_default_colors();
+        drawing_set_to_main_colors();
 
         // EMU_printf("Start: %hu, %hu\n", (uint8_t)x, (uint8_t)y);
 
@@ -504,6 +509,7 @@ static void draw_tool_floodfill(uint8_t x, uint8_t y) {
             }
 
             while (x1 <= x2) {
+                uint8_t st_x = x1;
                 while (flood_check_fillable(x1, y)) {
                     plot_point(x1, y);
                     x1 = x1 + 1;

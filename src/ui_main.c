@@ -63,7 +63,7 @@ void ui_update(void) BANKED {
 
         // Restore default draw colors in case they changed during menu updates
         // TODO: optimize: optionally only do this when changing between menu and drawing area instead of once per frame
-        drawing_restore_default_colors();
+        drawing_set_to_main_colors();
     }
 
 }
@@ -79,7 +79,7 @@ void ui_redraw_after_qrcode(void) BANKED {
 
     // Then restore the drawing on top of it
     drawing_restore_from_sram(SRAM_BANK_CUR_DRAWING_CACHE, DRAWING_SAVE_SLOT_MIN);
-    drawing_restore_default_colors();    
+    drawing_set_to_main_colors();
 }
 
 

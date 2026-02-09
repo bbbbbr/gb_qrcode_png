@@ -29,7 +29,7 @@ const uint8_t menu_tools[DRAW_TOOL_COUNT] = {
 
 static void ui_menu_tools(uint8_t cursor_8u_y);
 static void ui_menu_file(uint8_t cursor_8u_y);
-
+static void ui_swap_active_color(void);
 
 // Draws the paint working area
 void ui_redraw_menus_all(void) NONBANKED {
@@ -64,6 +64,8 @@ void ui_handle_menu_area(uint8_t cursor_8u_x, uint8_t cursor_8u_y) BANKED {
 
     // TODO: OPTIMIZE: instead of dispatching on every cursor move, only dispatch to menus on button press?
 
+    // TODO: Could partition the screen into left/Right to reduce the number of collision box tests
+
     // TODO: Sort of a hack, but cancel any pending tool operations if a button is pressed in the menu area
     if (KEY_TICKED(UI_ACTION_BUTTON)) {
         draw_tools_cancel_and_reset();
@@ -83,6 +85,18 @@ void ui_handle_menu_area(uint8_t cursor_8u_x, uint8_t cursor_8u_y) BANKED {
              (cursor_8u_y >= CLEAR_BUTTON_Y_START) && (cursor_8u_y < CLEAR_BUTTON_Y_END)) {
         if (KEY_TICKED(UI_ACTION_BUTTON)) {
             drawing_clear();
+        }
+    }
+    else if ((cursor_8u_x >= CLEAR_BUTTON_X_START) && (cursor_8u_x < CLEAR_BUTTON_X_END) &&
+             (cursor_8u_y >= CLEAR_BUTTON_Y_START) && (cursor_8u_y < CLEAR_BUTTON_Y_END)) {
+        if (KEY_TICKED(UI_ACTION_BUTTON)) {
+            drawing_clear();
+        }
+    }
+    else if ((cursor_8u_x >= COLOR_CHANGE_BUTTON_X_START) && (cursor_8u_x < COLOR_CHANGE_BUTTON_X_END) &&
+             (cursor_8u_y >= COLOR_CHANGE_BUTTON_Y_START) && (cursor_8u_y < COLOR_CHANGE_BUTTON_Y_END)) {
+        if (KEY_TICKED(UI_ACTION_BUTTON)) {
+            ui_swap_active_color();
         }
     }
 }
@@ -178,5 +192,25 @@ void ui_menu_file_draw_highlight(uint8_t num, uint8_t draw_color) BANKED {
 
     color(draw_color, WHITE, SOLID);
     box(x1, y1, x1 + (FILE_MENU_ITEM_WIDTH -1u), y1 + (FILE_MENU_ITEM_HEIGHT - 1u), M_NOFILL);
+}
+
+
+static void ui_swap_active_color(void) {
+    // Switch the active color
+    if (app_state.draw_color_main == BLACK) {
+        app_state.draw_color_main = WHITE;
+        app_state.draw_color_bg   = BLACK;
+    }
+    else {
+        app_state.draw_color_main = BLACK;
+        app_state.draw_color_bg   = WHITE;
+    }
+
+    // Redraw the icon to match current state
+    color(app_state.draw_color_bg, app_state.draw_color_bg, SOLID);
+    box(COLOR_ALT_X_START,  COLOR_ALT_Y_START,  COLOR_ALT_X_END,  COLOR_ALT_Y_END,  M_FILL);
+
+    color(app_state.draw_color_main, app_state.draw_color_main, SOLID);
+    box(COLOR_MAIN_X_START, COLOR_MAIN_Y_START, COLOR_MAIN_X_END, COLOR_MAIN_Y_END, M_FILL);
 }
 

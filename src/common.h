@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <gb/drawing.h>
+
 #include "png_indexed.h"
 
 #define ARRAY_LEN(A)  (sizeof(A) / sizeof(A[0]))
@@ -23,6 +25,9 @@
 #define DRAWING_SAVE_SLOT_MIN   0u
 #define DRAWING_SAVE_SLOT_MAX   2u
 #define DRAWING_SAVE_SLOT_COUNT ((DRAW_SAVE_SLOT_MAX - DRAW_SAVE_SLOT_MIN) + 1u)
+
+#define DRAW_COLOR_MAIN_DEFAULT (BLACK)
+#define DRAW_COLOR_BG_DEFAULT   (WHITE)
 
 #define SRAM_BANK_0   0u
 #define SRAM_BANK_1   1u
@@ -175,6 +180,9 @@ typedef struct app_state_t {
     uint8_t draw_cursor_8u_last_y;
 
     bool    draw_tool_using_b_button_action;
+
+    uint8_t draw_color_main;
+    uint8_t draw_color_bg;
 
 } app_state_t;
 
