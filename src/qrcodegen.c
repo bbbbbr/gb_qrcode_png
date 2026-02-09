@@ -102,6 +102,7 @@ enum qrcodegen_Mode {
 // #define qrcodegen_BUFFER_SZ  (QRPAD * QRSIZE/8)
 #define qrcodegen_BUFFER_SZ  (QR_OUTPUT_ROW_SZ_BYTES * QR_FINAL_PIXEL_HEIGHT)
 
+// TODO: OPTIONAL: Could move TMPBUFFER into SRAM (it's ~2.5K at max QR Size)
 uint8_t TMPBUFFER[qrcodegen_BUFFER_SZ];
 uint8_t QRCODE[qrcodegen_BUFFER_SZ];
 
