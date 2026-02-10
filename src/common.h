@@ -29,7 +29,7 @@
 
 // Similar deal as Save slots, different Cart SRAM Bank
 #define DRAW_UNDO_SLOTS_PER_SRAM_BANK 3u // 3 slots per sram bank based on 0x2000 / (12 x 12 tiles x 16 bytes per tile)
-#define DRAW_UNDO_SRAM_NUM_BANKS      2u
+#define DRAW_UNDO_SRAM_NUM_BANKS      2u  // TODO: Could be expanded up to ~14 banks with a 128K cart for a deep undo queue
 
 #define DRAW_UNDO_SLOT_MIN     (DRAW_SAVE_SLOT_MIN)
 #define DRAW_UNDO_SLOT_MAX     ((DRAW_UNDO_SRAM_NUM_BANKS * DRAW_UNDO_SLOTS_PER_SRAM_BANK) - 1u) // NOTE: Spread across 2 SRAM banks!
