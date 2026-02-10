@@ -47,15 +47,20 @@ void drawing_take_undo_snapshot(void) BANKED {
     if (app_state.undo_count < DRAW_UNDO_SLOT_COUNT) {
         app_state.undo_count++;
     }
-
     // Increment slot used, wrap around if needed    
     if (app_state.undo_slot_current == DRAW_UNDO_SLOT_MAX)
         app_state.undo_slot_current = DRAW_UNDO_SLOT_MIN;
     else
         app_state.undo_slot_current++;
 
+    // Adjust SRAM access if undo slots are in the second SRAM bank (i.e. later half of undo states)
     uint8_t sram_bank = SRAM_BANK_UNDO_SNAPSHOTS_LO;
-    drawing_save_to_sram(sram_bank, app_state.undo_slot_current);
+    uint8_t sram_slot = app_state.undo_slot_current;
+    if (app_state.undo_slot_current >= DRAW_UNDO_SLOTS_PER_SRAM_BANK) {
+        sram_bank = SRAM_BANK_UNDO_SNAPSHOTS_HI;
+        sram_slot -= DRAW_UNDO_SLOTS_PER_SRAM_BANK;
+    }
+    drawing_save_to_sram(sram_bank, sram_slot);
 
     EMU_printf("  - Undo: Done (count=%hu, slot=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.undo_slot_current);
     // Display undo button if going from zero to 1 snapshots
@@ -71,8 +76,14 @@ void drawing_restore_undo_snapshot(void) BANKED {
     // Make sure there is an undo to restore from
     if (app_state.undo_count > DRAW_UNDO_COUNT_NONE) {
 
+        // Adjust SRAM access if undo slots are in the second SRAM bank (i.e. later half of undo states)
         uint8_t sram_bank = SRAM_BANK_UNDO_SNAPSHOTS_LO;
-        drawing_restore_from_sram(sram_bank, app_state.undo_slot_current);
+        uint8_t sram_slot = app_state.undo_slot_current;
+        if (app_state.undo_slot_current >= DRAW_UNDO_SLOTS_PER_SRAM_BANK) {
+            sram_bank = SRAM_BANK_UNDO_SNAPSHOTS_HI;
+            sram_slot -= DRAW_UNDO_SLOTS_PER_SRAM_BANK;
+        }
+        drawing_restore_from_sram(sram_bank, sram_slot);
 
         // Reduce size of undo queue
         app_state.undo_count--;
