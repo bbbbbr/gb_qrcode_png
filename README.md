@@ -14,7 +14,7 @@ Drawing Controls:
 - `D-Pad`: Move cursor
 - `A`: Draws with tool
 - `B`: Cancel tool action / Teleport cursor between menu and drawing areas
-- `SELECT`: Toggle Cursor Speed
+- `SELECT + UP/DOWN`: Adjust Cursor Speed
 - `START`: Create QRCode
 
 
