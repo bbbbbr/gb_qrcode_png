@@ -48,6 +48,7 @@ void app_state_reset(void) BANKED {
     app_state.draw_color_main = DRAW_COLOR_MAIN_DEFAULT;
     app_state.draw_color_bg   = DRAW_COLOR_BG_DEFAULT;
 
+    app_state.draw_width = DRAW_WIDTH_MODE_DEFAULT;
 }
 
 

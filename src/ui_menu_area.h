@@ -32,10 +32,10 @@
 #define RIGHT_MENU_X_START 134u
 #define RIGHT_MENU_Y_START 24u
 
-#define RIGHT_MENU_WIDTH  (RIGHT_MENU_ITEM_WIDTH)
+#define RIGHT_MENU_DRAW_WIDTH  (RIGHT_MENU_ITEM_WIDTH)
 #define RIGHT_MENU_HEIGHT (RIGHT_MENU_ITEM_HEIGHT * RIGHT_MENU_ITEM_COUNT)
 
-#define RIGHT_MENU_X_END  ((RIGHT_MENU_X_START) + RIGHT_MENU_WIDTH)
+#define RIGHT_MENU_X_END  ((RIGHT_MENU_X_START) + RIGHT_MENU_DRAW_WIDTH)
 #define RIGHT_MENU_Y_END  ((RIGHT_MENU_Y_START) + (RIGHT_MENU_HEIGHT))
 
     // ===== SWAP COLOR BUTTON =====
@@ -62,7 +62,7 @@
     #define COLOR_ALT_Y_END   (COLOR_ALT_Y_START   + COLOR_ALT_HEIGHT)
 
     // Undo button is actually a sprite to make it cheaper to turn on/off
-    #define UNDO_BUTTON_SPR_X   ((RIGHT_MENU_X_START + 7u) + DEVICE_SPRITE_PX_OFFSET_X)
+    #define UNDO_BUTTON_SPR_X   ((RIGHT_MENU_X_START + 7u) + (uint8_t)DEVICE_SPRITE_PX_OFFSET_X)
     #define UNDO_BUTTON_SPR_Y   ((RIGHT_MENU_Y_START + (RIGHT_MENU_UNDO * RIGHT_MENU_ITEM_HEIGHT) + 4u) + DEVICE_SPRITE_PX_OFFSET_Y)
 
     // Speed Button (update handled in ui_main)
@@ -77,6 +77,12 @@
     #define CURSOR_SPEED_IND_ROW_SZ_BYTES        (CURSOR_SPEED_IND_TILES_WIDTH * TILE_SZ_BYTES)
     #define CURSOR_SPEED_IND_MODE_SZ_BYTES       ((CURSOR_SPEED_IND_TILES_WIDTH * CURSOR_SPEED_IND_TILES_HEIGHT) * TILE_SZ_BYTES)
 
+
+    // Draw Width indicator button
+    #define DRAW_WIDTH_IND_SPR_X                ((RIGHT_MENU_X_START) + DEVICE_SPRITE_PX_OFFSET_X)
+    #define DRAW_WIDTH_IND_SPR_Y                ((RIGHT_MENU_Y_START + ((RIGHT_MENU_DRAW_WIDTH - 1u) * RIGHT_MENU_ITEM_HEIGHT) + 11u) + DEVICE_SPRITE_PX_OFFSET_Y)
+
+    #define DRAW_WIDTH_SPR_STEP_X               7u
 
 // ===== (BOTTOM) FILE MENU =====
 
@@ -103,9 +109,10 @@ void ui_handle_menu_area(uint8_t cursor_8u_x, uint8_t cursor_8u_y) BANKED;
 void ui_menu_tools_draw_highlight(uint8_t tool_num, uint8_t draw_color) BANKED;
 void ui_menu_file_draw_highlight(uint8_t num, uint8_t draw_color) BANKED;
 
-void ui_undo_button_enable(void) NONBANKED;
-void ui_undo_button_disable(void) NONBANKED;
+void ui_undo_button_enable(void) BANKED;
+void ui_undo_button_disable(void) BANKED;
 
 void ui_cursor_speed_redraw_indicator(void) NONBANKED;
+void ui_draw_width_redraw_indicator(void) BANKED;
 
 #endif // UI_MAIN_AREA_H

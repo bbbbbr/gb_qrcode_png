@@ -18,6 +18,8 @@
 // J_SELECT Shortcut/hotkey buttons
 #define SPEED_UP_BUTTON             (J_UP)
 #define SPEED_DOWN_BUTTON           (J_DOWN)
+#define DRAW_WIDTH_UP_BUTTON        (J_RIGHT)
+#define DRAW_WIDTH_DOWN_BUTTON      (J_LEFT)
 
 
 #define ALL_MENUS_BG_COLOR          (LTGREY)
@@ -125,6 +127,19 @@ enum {
 };
 
 enum {
+    DRAW_WIDTH_MODE_MIN,
+
+    DRAW_WIDTH_MODE_1 = DRAW_WIDTH_MODE_MIN,
+    DRAW_WIDTH_MODE_2,
+    DRAW_WIDTH_MODE_3,
+
+    DRAW_WIDTH_MODE_MAX = DRAW_WIDTH_MODE_3,
+    DRAW_WIDTH_MODE_DEFAULT = DRAW_WIDTH_MODE_1,
+    DRAW_WIDTH_MODE_COUNT = ((DRAW_WIDTH_MODE_MAX - DRAW_WIDTH_MODE_MIN) + 1u)
+};
+
+
+enum {
     CURSOR_TELEPORT_MIN,
 
     CURSOR_TELEPORT_DRAWING = CURSOR_TELEPORT_MIN,
@@ -159,7 +174,7 @@ enum {
     RIGHT_MENU_REDO = RIGHT_MENU_MIN,
     RIGHT_MENU_UNDO,
     RIGHT_MENU_COLOR_SWAP,
-    RIGHT_MENU_WIDTH,
+    RIGHT_MENU_DRAW_WIDTH_IND,
     RIGHT_MENU_SPEED,
     RIGHT_MENU_CLEAR,
 
@@ -223,6 +238,7 @@ typedef struct app_state_t {
 
     uint8_t draw_color_main;
     uint8_t draw_color_bg;
+    uint8_t draw_width;
 
 } app_state_t;
 

@@ -21,6 +21,7 @@
 
 #pragma bank 255  // Autobanked
 
+static void ui_draw_width_handle_input(void);
 static void ui_cursor_speed_handle_input(void);
 static void ui_cursor_teleport_save_zone(uint8_t teleport_zone_to_save);
 static inline void ui_cursor_update(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
@@ -39,9 +40,11 @@ void ui_init(void) NONBANKED {
     SWITCH_ROM(BANK(sprites_img));
     set_sprite_data(SPRITE_TILE_MOUSE_START, SPRITE_CURSOR_COUNT,      SPRITE_CURSOR_TILE_DATA_START);
     set_sprite_data(SPRITE_TILE_UNDO_BUTTON, SPRITE_UNDO_BUTTON_COUNT, SPRITE_UNDO_TILE_DATA_START);    
+    set_sprite_data(SPRITE_TILE_DRAW_WIDTH_IND, SPRITE_DRAW_WIDTH_IND_COUNT, SPRITE_DRAW_WIDTH_IND_TILE_DATA_START);
     SWITCH_ROM(save_bank);
 
     set_sprite_tile(SPRITE_ID_UNDO_BUTTON, SPRITE_TILE_UNDO_BUTTON);
+    set_sprite_tile(SPRITE_ID_DRAW_WIDTH_IND, SPRITE_TILE_DRAW_WIDTH_IND);
     // Undo not enabled by default, will get hidden on initial menu setup
 
     // == Enters drawing mode ==
@@ -61,6 +64,7 @@ void ui_update(void) BANKED {
 
     if (KEY_PRESSED(UI_SHORTCUT_BUTTON)) {
         ui_cursor_speed_handle_input();
+        ui_draw_width_handle_input();
     }
     else {
         // Split UI handling between drawing area and UI
@@ -98,12 +102,39 @@ void ui_redraw_after_qrcode(void) BANKED {
 }
 
 
+void ui_draw_width_cycle(void) BANKED {
+
+    app_state.draw_width++;
+    if (app_state.draw_width > DRAW_WIDTH_MODE_MAX)
+        app_state.draw_width = DRAW_WIDTH_MODE_MIN;
+
+    ui_draw_width_redraw_indicator();
+}
+
+
+static void ui_draw_width_handle_input(void) {
+
+    if (KEY_TICKED(DRAW_WIDTH_UP_BUTTON)) {        
+        if (app_state.draw_width < DRAW_WIDTH_MODE_MAX)
+            app_state.draw_width++;
+            ui_draw_width_redraw_indicator();
+    }
+    else if (KEY_TICKED(DRAW_WIDTH_DOWN_BUTTON)) {        
+        if (app_state.draw_width > DRAW_WIDTH_MODE_MIN)
+            app_state.draw_width--;
+            ui_draw_width_redraw_indicator();
+    }
+}
+
+
 // Used for clicking speed menu button
 void ui_cursor_cycle_speed(void) BANKED {
     if (app_state.cursor_speed_mode == CURSOR_SPEED_MODE_MAX)
         app_state.cursor_speed_mode = CURSOR_SPEED_MODE_MIN;
     else
         app_state.cursor_speed_mode++;
+
+    ui_cursor_speed_redraw_indicator();
 }
 
 

@@ -64,6 +64,7 @@ void ui_redraw_menus_all(void) NONBANKED {
         ui_undo_button_disable();
 
     ui_cursor_speed_redraw_indicator();
+    ui_draw_width_redraw_indicator();
 
     DISPLAY_ON;
 
@@ -210,16 +211,21 @@ static void ui_menu_right(uint8_t cursor_8u_y) {
 
         switch (file_menu_item) {
             case RIGHT_MENU_REDO: break; // TODO
-            case RIGHT_MENU_UNDO: ui_perform_undo();
-                                  break;
+
+            case RIGHT_MENU_UNDO:       ui_perform_undo();
+                                        break;
+
             case RIGHT_MENU_COLOR_SWAP: ui_swap_active_color();
                                         break;
-            case RIGHT_MENU_WIDTH: break; // TODO
-            case RIGHT_MENU_SPEED: ui_cursor_cycle_speed();
-                                   ui_cursor_speed_redraw_indicator();
-                                   break;
-            case RIGHT_MENU_CLEAR: drawing_clear();
-                                   break;
+
+            case RIGHT_MENU_DRAW_WIDTH_IND: ui_draw_width_cycle();
+                                        break;
+
+            case RIGHT_MENU_SPEED:      ui_cursor_cycle_speed();                                        
+                                        break;
+
+            case RIGHT_MENU_CLEAR:      drawing_clear();
+                                        break;
         }
     }
 }
@@ -245,14 +251,14 @@ static void ui_swap_active_color(void) {
 }
 
 
-void ui_undo_button_enable(void) NONBANKED {
+void ui_undo_button_enable(void) BANKED {
     move_sprite(SPRITE_ID_UNDO_BUTTON, UNDO_BUTTON_SPR_X, UNDO_BUTTON_SPR_Y);
 
     EMU_printf("enable undo\n");
 }
 
 
-void ui_undo_button_disable(void) NONBANKED {
+void ui_undo_button_disable(void) BANKED {
     hide_sprite(SPRITE_ID_UNDO_BUTTON);
 
     EMU_printf("disable undo\n");
@@ -268,10 +274,10 @@ void ui_cursor_speed_redraw_indicator(void) NONBANKED {
     const uint8_t * p_tile_src = speed_button_tiles + (app_state.cursor_speed_mode * CURSOR_SPEED_IND_MODE_SZ_BYTES);
 
     // Copy two rows of tiles
-    vmemcpy((uint8_t*)CURSOR_SPEED_IND_ROW1_VRAM_ADDR, p_tile_src, CURSOR_SPEED_IND_ROW_SZ_BYTES);
+    vmemcpy((uint8_t*)CURSOR_SPEED_IND_ROW1_VRAM_ADDR, (uint8_t *)p_tile_src, CURSOR_SPEED_IND_ROW_SZ_BYTES);
 
     p_tile_src += CURSOR_SPEED_IND_ROW_SZ_BYTES;
-    vmemcpy((uint8_t*)CURSOR_SPEED_IND_ROW2_VRAM_ADDR, p_tile_src, CURSOR_SPEED_IND_ROW_SZ_BYTES);
+    vmemcpy((uint8_t*)CURSOR_SPEED_IND_ROW2_VRAM_ADDR, (uint8_t *)p_tile_src, CURSOR_SPEED_IND_ROW_SZ_BYTES);
 
     SWITCH_ROM(save_bank);
 }
@@ -280,3 +286,10 @@ void ui_cursor_speed_redraw_indicator(void) NONBANKED {
 static void ui_perform_undo(void) {
     drawing_restore_undo_snapshot();
 }
+
+
+void ui_draw_width_redraw_indicator(void) BANKED {
+    uint8_t spr_x = DRAW_WIDTH_IND_SPR_X + (app_state.draw_width * DRAW_WIDTH_SPR_STEP_X);
+    move_sprite(SPRITE_ID_DRAW_WIDTH_IND, spr_x, DRAW_WIDTH_IND_SPR_Y);
+}
+
