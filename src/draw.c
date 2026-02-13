@@ -24,6 +24,12 @@ enum {
 
 static uint8_t get_radius(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 
+// Width variations for tools
+static void draw_tool_pencil_width_2(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
+static void draw_tool_pencil_width_3(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
+
+static void draw_tool_line_width_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
+
 static void draw_tool_pencil(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
@@ -137,6 +143,57 @@ void draw_tools_cancel_and_reset(void) BANKED {
 }
 
 
+static void draw_tool_pencil_width_2(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
+    // 3x3 cross shape
+    uint8_t min_x = cursor_8u_x - 1u;
+    uint8_t min_y = cursor_8u_y - 1u;
+    uint8_t max_x = cursor_8u_x + 1u;
+    uint8_t max_y = cursor_8u_y + 1u;
+
+    // Draw area clipping
+    if (min_x < IMG_X_START) min_x = IMG_X_START;
+    if (min_y < IMG_Y_START) min_y = IMG_Y_START;
+    if (max_x > IMG_X_END)   max_x = IMG_X_END;
+    if (max_y > IMG_Y_END)   max_y = IMG_Y_END;
+
+    line(min_x, cursor_8u_y, max_x, cursor_8u_y);
+    line(cursor_8u_x, min_y, cursor_8u_x, max_y);
+}
+
+
+static void draw_tool_pencil_width_3(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
+    // ~4 pixel wide filled circle shape
+    // 3x3 cross shape
+    uint8_t min_x = cursor_8u_x - 1u;
+    uint8_t min_y = cursor_8u_y - 1u;
+    uint8_t max_x = cursor_8u_x;
+    uint8_t max_y = cursor_8u_y;
+
+    // Draw area clipping
+    if (min_x < IMG_X_START) min_x++;
+    if (min_y < IMG_Y_START) min_y++;
+
+    // Narrow Top line
+    line(min_x, min_y, max_x, min_y);
+
+    // Wider Middle line
+    if (min_x > IMG_X_START) min_x--;
+    if (max_x < IMG_X_END)   max_x++;
+    line(min_x, max_y, max_x, max_y);
+
+    // Wider Lower line
+    if (max_y < IMG_Y_END)   max_y++;
+    line(min_x, max_y, max_x, max_y);
+
+    // Narrow Bottom line
+    min_x = cursor_8u_x - 1u;
+    max_x = cursor_8u_x;
+    if (min_x < IMG_X_START) min_x++;
+    if (max_y < IMG_Y_END)   max_y++;
+    line(min_x, max_y, max_x, max_y);
+}
+
+
 static void draw_tool_pencil(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
     // Start drawing
@@ -156,10 +213,82 @@ static void draw_tool_pencil(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
     // Draw if active
     if (app_state.tool_currently_drawing) {
-        plot_point(cursor_8u_x, cursor_8u_y);
+        if (app_state.draw_width == DRAW_WIDTH_MODE_1)
+            plot_point(cursor_8u_x, cursor_8u_y);
+        else if (app_state.draw_width == DRAW_WIDTH_MODE_2)
+            draw_tool_pencil_width_2(cursor_8u_x, cursor_8u_y);
+        else // Implied: DRAW_WIDTH_MODE_3
+            draw_tool_pencil_width_3(cursor_8u_x, cursor_8u_y);
     }
 }
 
+
+static void draw_tool_line_width_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
+
+    uint8_t start_x = tool_start_x;
+    uint8_t start_y = tool_start_y;
+    uint8_t end_x   = cursor_8u_x;
+    uint8_t end_y   = cursor_8u_y;
+
+    // Draw area clipping (limit to START -1 to accommodate for left/up shifting of second line
+    if (start_x < (IMG_X_START + 1u)) start_x = IMG_X_START + 1u;
+    if (start_y < (IMG_Y_START + 1u)) start_y = IMG_Y_START + 1u;
+    if (end_x   < (IMG_X_START + 1u)) end_x   = IMG_X_START + 1u;
+    if (end_y   < (IMG_Y_START + 1u)) end_y   = IMG_Y_START + 1u;
+
+    if (app_state.draw_width == DRAW_WIDTH_MODE_3) {
+        // Draw area clipping (limit to START -1 to accommodate for left/up shifting of second line
+        if (start_x > (IMG_X_END - 1u)) start_x = IMG_X_END - 1u;
+        if (start_y > (IMG_Y_END - 1u)) start_y = IMG_Y_END - 1u;
+        if (end_x   > (IMG_X_END - 1u)) end_x   = IMG_X_END - 1u;
+        if (end_y   > (IMG_Y_END - 1u)) end_y   = IMG_Y_END - 1u;
+    }
+
+    uint8_t dist_x = (start_x > end_x) ? start_x - end_x : end_x - start_x;
+    uint8_t dist_y = (start_y > end_y) ? start_y - end_y : end_y - start_y;
+
+    // First line
+    line(start_x, start_y, end_x, end_y);
+
+    // Second line is shifted by 1 pixel, direction depends on line slope
+    if (start_x == end_x) {
+        start_x--; end_x--; // Vertical line
+    }
+    else if (start_y == end_y) {
+        start_y--; end_y--; // Horizontal line
+    }
+    else if (dist_x > dist_y) {
+        start_y--; end_y--; // Line has more horizontal spread than vertical
+    }
+    else { // Implied: else if (dist_x > dist_y) || (dist_x == dist_y)
+        start_x--; end_x--; // Line has more vertical spread than vertical
+    }
+
+    line(start_x, start_y, end_x, end_y);
+
+    // Third line if applicable
+    if (app_state.draw_width == DRAW_WIDTH_MODE_3) {
+
+        // The += 2 below instead of ++ is to compensate for the earlier -1
+        // to get onto the opposite side of the midpoint line
+
+        // Second line is shifted by 1 pixel, direction depends on line slope
+        if (start_x == end_x) {
+            start_x+=2; end_x+=2; // Vertical line
+        }
+        else if (start_y == end_y) {
+            start_y+=2; end_y+=2; // Horizontal line
+        }
+        else if (dist_x > dist_y) {
+            start_y+=2; end_y+=2; // Line has more horizontal spread than vertical
+        }
+        else { // Implied: else if (dist_x > dist_y) || (dist_x == dist_y)
+            start_x+=2; end_x+=2; // Line has more vertical spread than vertical
+        }
+
+        line(start_x, start_y, end_x, end_y);
+    }
+}
 
 
 static void draw_tool_line_finalize_last_preview(void) {
@@ -173,7 +302,10 @@ static void draw_tool_line_finalize_last_preview(void) {
 
     // Draw finalized version
     drawing_set_to_main_colors();
-    line(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
+    if (app_state.draw_width == DRAW_WIDTH_MODE_1)
+        line(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
+    else
+        draw_tool_line_width_2_and_3(app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
 }
 
 
@@ -222,7 +354,7 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
             //       2. Take a snapshot for each line segment, which uses excessive undo slots is less non-intuitive
             //       3. The middle ground is to Defer the first snapshot until after the first line segment is about
             //          to be finalized. After that don't take anymore snapshots until line drawing is completed
-            //   
+            //
             // Approach taken is number #3
             // So only take a snapshot before committing the first line segment
             if (tool_undo_snapshot_taken == false) {
@@ -231,7 +363,11 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
             }
 
             drawing_set_to_main_colors();
-            line(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y);
+            if (app_state.draw_width == DRAW_WIDTH_MODE_1)
+                line(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y);
+            else
+                draw_tool_line_width_2_and_3(cursor_8u_x, cursor_8u_y);
+
 
             // Finalizing doesn't end line drawing, instead
             // it begins a new line at the current position
