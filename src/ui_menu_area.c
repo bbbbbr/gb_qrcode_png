@@ -81,6 +81,12 @@ void ui_handle_menu_area(uint8_t cursor_8u_x, uint8_t cursor_8u_y) BANKED {
             (cursor_8u_y >= FILE_MENU_Y_START) && (cursor_8u_y < FILE_MENU_Y_END)) {
             ui_menu_file(cursor_8u_x);
         }
+    } // Top title bar area
+    else if (cursor_8u_y < TITLE_BAR_MENU_Y_END) {
+        if ((cursor_8u_x >= HELP_BUTTON_X_START) && (cursor_8u_x < HELP_BUTTON_X_END) &&
+            (cursor_8u_y >= HELP_BUTTON_Y_START) && (cursor_8u_y < HELP_BUTTON_Y_END)) {
+            if (KEY_TICKED(UI_ACTION_BUTTON)) help_page_show();
+        }
     } // Partition the screen left/right
     else if (cursor_8u_x < (DEVICE_SCREEN_PX_WIDTH / 2u)) {
         // Tools Menu

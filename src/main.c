@@ -52,6 +52,8 @@ void main(void)
     ui_init();
     draw_init();
 
+    help_page_show();
+
     SHOW_SPRITES;
 
     // Loop forever
