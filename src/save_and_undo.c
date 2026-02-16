@@ -94,7 +94,7 @@ static inline uint8_t get_previous_undo_slot(void) {
 // Undo snapshots are a ring buffer stored in SRAM
 void drawing_take_undo_snapshot(void) BANKED {
 
-    EMU_printf("Undo: Taking (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
+    // EMU_printf("Undo: Taking (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
     uint8_t sram_bank, sram_slot;
 
     // Hide redo button if showing
@@ -115,7 +115,7 @@ void drawing_take_undo_snapshot(void) BANKED {
     // Increment slot used AFTER taking it
     app_state.next_undo_slot = get_next_undo_slot();
 
-    EMU_printf("  - Undo: Done (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
+    // EMU_printf("  - Undo: Done (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
 
     // Make sure undo button is enabled
     ui_undo_button_refresh();
@@ -126,7 +126,7 @@ void drawing_take_undo_snapshot(void) BANKED {
 // If sram size is increased the qrcode snapshotting could be split off from the undo stack and remove the need for this
 void drawing_restore_undo_snapshot(bool take_redo_snapshot) BANKED {
 
-    EMU_printf("Undo: Restore requested (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
+    // EMU_printf("Undo: Restore requested (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
     uint8_t sram_bank, sram_slot;
 
     // Make sure there is an undo to restore from
@@ -164,16 +164,16 @@ void drawing_restore_undo_snapshot(bool take_redo_snapshot) BANKED {
         app_state.undo_count--;
         ui_undo_button_refresh();
 
-        EMU_printf("  - Undo: Restore completed (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
+        // EMU_printf("  - Undo: Restore completed (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
     } else {
-        EMU_printf("  - Undo: None Found (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
+        // EMU_printf("  - Undo: None Found (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
     }
 }
 
 
 void drawing_restore_redo_snapshot(void) BANKED {
 
-    EMU_printf("Undo: REDO Restore requested (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
+    // EMU_printf("Undo: REDO Restore requested (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
     uint8_t sram_bank, sram_slot;
 
     // Make sure there is an redo to restore from
@@ -194,9 +194,9 @@ void drawing_restore_redo_snapshot(void) BANKED {
 
         app_state.next_undo_slot = get_next_undo_slot();
 
-        EMU_printf("  - Undo: REDO Restore completed (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
+        // EMU_printf("  - Undo: REDO Restore completed (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
     } else {
-        EMU_printf("  - Undo: REDO None Found (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
+        // EMU_printf("  - Undo: REDO None Found (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
     }
 }
 
