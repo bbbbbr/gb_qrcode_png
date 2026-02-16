@@ -64,6 +64,7 @@ drawing image that was exported as a QRCode.
 
 
 ## Dev Tools Used
-GBDK-2020 (4.5.0+)
-Emulicious
+- GBDK-2020 (4.5.0+)
+- Emulicious
+- ImHex
 
