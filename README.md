@@ -8,6 +8,9 @@ https://github.com/bbbbbr/gameboy_qr_paint
 Draw on the Game Boy and share it direct to your phone using a QRCode!
 (without the internet!)
 
+![Photograph of QR Paint on a Game Boy Color with a drawing of a dogcow](/info/qrpaint_0.90_dogcow_on_cgb_sm.jpg)
+![Photograph of QR Paint showing a QRCode on a Game Boy Color which encodes the dogcow drawing, and a mobile phone showing the transferred image in a web browser](/info/qrpaint_0.90_dogcow_qrcode_on_cgb_and_mobile_sm.jpg)
+
 
 ## Features
 - Share drawings as PNG images via QR Code
@@ -27,6 +30,11 @@ Button Controls:
 - `SELECT + UP/DOWN`: Adjust Cursor Speed
 - `SELECT + LEFT/RIGHT`: Adjust Drawing Width
 - `START`: Create QRCode
+
+The cursor movement has a small amount of inertia while in the drawing areas.
+It will apply as long as some button is being held down, and resets to zero
+when all buttons are released. This helps with drawing curves using a D-Pad,
+which otherwise tends toward right angles and diagonals.
 
 
 ## Sending to Mobile Phone
