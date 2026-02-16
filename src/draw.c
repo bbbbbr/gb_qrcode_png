@@ -294,8 +294,11 @@ static void draw_tool_line_width_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u_
 
 static void draw_tool_line_finalize_last_preview(void) {
     // Undraw last preview
-    color(BLACK,WHITE,XOR);
-    line(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
+    // Don't draw (for preview) lines that start and end on the same pixel
+    if ((tool_start_x != app_state.draw_cursor_8u_last_x) || (tool_start_y != app_state.draw_cursor_8u_last_y)) {
+        color(BLACK,WHITE,XOR);
+        line(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
+    }
 
     // Take undo snapshot only if not already takenif needed (see main line draw for details)
     if (tool_undo_snapshot_taken == false)
@@ -319,9 +322,9 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
             tool_undo_snapshot_taken = false;
             tool_start_x = cursor_8u_x;
             tool_start_y = cursor_8u_y;
-            // Draw the first line (1 pixel) XOR style so it can be undrawn
-            color(BLACK,WHITE,XOR);
-            line(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y);
+
+            // Don't XOR draw the first line preview now since it would be 1 pixel long.
+            // 1 pixel line drawing gets suppressed in the rest of the preview drawing as well
 
             // Set line starting point
             app_state.draw_tool_using_b_button_action = true;
@@ -330,19 +333,27 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
     } else {
         // Line drawing is active, currently previewing position
+        bool    new_cursor_pos     = ((cursor_8u_x != app_state.draw_cursor_8u_last_x) ||
+                                      (cursor_8u_y != app_state.draw_cursor_8u_last_y));
 
         uint8_t current_action = DRAW_ACTION_IDLE;
         if      (KEY_TICKED(DRAW_MAIN_BUTTON))   current_action = DRAW_ACTION_FINALIZE;
         else if (KEY_TICKED(DRAW_CANCEL_BUTTON)) current_action = DRAW_ACTION_CANCEL;
-        else if ((cursor_8u_x != app_state.draw_cursor_8u_last_x) ||
-                 (cursor_8u_y !=app_state.draw_cursor_8u_last_y)) current_action = DRAW_ACTION_NEW_DRAW_POSITION;
-
+        else if (new_cursor_pos)                 current_action = DRAW_ACTION_NEW_DRAW_POSITION;
 
         // Un-draw from the last frame (XOR)
+        //
         // But only if the cursor moved (so it remains visible), it's being canceled, or being finalized (to take a clean undo snapshot)
         if (current_action != DRAW_ACTION_IDLE) {
-            color(BLACK,WHITE,XOR);
-            line(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
+            // Don't draw (for preview) lines that start and end on the same pixel
+            if ((tool_start_x != app_state.draw_cursor_8u_last_x) || (tool_start_y != app_state.draw_cursor_8u_last_y)) {
+                color(BLACK,WHITE,XOR);
+                line(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
+
+                // EMU_printf(" Line UNDRAW xor: tx=%hu, ty=%hu | cx=%hu, cy=%hu | lx=%hu, ly=%hu\n",
+                //             (uint8_t)tool_start_x, (uint8_t)tool_start_y, (uint8_t)cursor_8u_x, (uint8_t)cursor_8u_y,
+                //             (uint8_t)app_state.draw_cursor_8u_last_x, (uint8_t)app_state.draw_cursor_8u_last_y);
+            }
         }
 
         // If finalizing is requested, draw it normally
@@ -384,8 +395,11 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         }
         else if (current_action == DRAW_ACTION_NEW_DRAW_POSITION) {
             // If moved, update the preview to the new position, XOR draw so it can be un-drawn later
-            color(BLACK,WHITE,XOR);
-            line(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y);
+            // Don't draw (for preview) lines that start and end on the same pixel
+            if ((tool_start_x != cursor_8u_x) || (tool_start_y != cursor_8u_y)) {
+                color(BLACK,WHITE,XOR);
+                line(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y);
+            }
         }
     }
 }
