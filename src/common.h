@@ -30,6 +30,12 @@
 #define FILE_MENU_BG_COLOR         (ALL_MENUS_BG_COLOR)
 #define FILE_MENU_HIGHLIGHT_COLOR  (DKGREY)
 
+#define FILE_CONFIRM_CHECK_COUNT_OFF      0u
+#define FILE_CONFIRM_CHECK_COUNT_ENABLE  60u  // display for 60 frames
+#define FILE_CONFIRM_CHECK_COUNT_RESET   (FILE_CONFIRM_CHECK_COUNT_OFF)
+#define FILE_CONFIRM_FORCE_REDRAW        true
+#define FILE_CONFIRM_NORMAL_UPDATE       false
+
 #define DRAW_SAVE_SLOT_MIN     0u
 #define DRAW_SAVE_SLOT_MAX     2u
 #define DRAW_SAVE_SLOT_COUNT   ((DRAW_SAVE_SLOT_MAX - DRAW_SAVE_SLOT_MIN) + 1u)
@@ -211,6 +217,7 @@ typedef struct app_state_t {
 
     // == Save and undo ==
     uint8_t save_slot_current;
+    uint8_t file_confirm_check_counter;
 
     uint8_t undo_count;
     uint8_t redo_count;

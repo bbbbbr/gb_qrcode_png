@@ -117,6 +117,9 @@
 #define FILE_MENU_Y_END  ((FILE_MENU_Y_START) + (FILE_MENU_HEIGHT))
 
 
+    // File confirm check sprite
+    #define FILE_CONFIRM_CHECK_SPR_X(slot_num)  ((((slot_num + FILE_MENU_START_OF_SAVE_SLOTS_OFFSET) * FILE_MENU_ITEM_WIDTH) + FILE_MENU_X_START) + 10u + DEVICE_SPRITE_PX_OFFSET_X)
+    #define FILE_CONFIRM_CHECK_SPR_Y            ((FILE_MENU_Y_START) - 3u + DEVICE_SPRITE_PX_OFFSET_Y)
 
 
 void ui_redraw_menus_all(void) NONBANKED;
@@ -130,5 +133,7 @@ void ui_redo_button_refresh(void) BANKED;
 
 void ui_cursor_speed_redraw_indicator(void) NONBANKED;
 void ui_draw_width_redraw_indicator(void) BANKED;
+
+void ui_file_confirm_check_update(bool force_redraw) BANKED;
 
 #endif // UI_MAIN_AREA_H

@@ -37,6 +37,8 @@ static void ui_swap_active_color(void);
 static void ui_perform_undo(void);
 static void ui_perform_redo(void);
 
+static void ui_file_confirm_check_show(void);
+
 // Draws the paint working area
 void ui_redraw_menus_all(void) NONBANKED {
 
@@ -64,6 +66,7 @@ void ui_redraw_menus_all(void) NONBANKED {
 
     ui_cursor_speed_redraw_indicator();
     ui_draw_width_redraw_indicator();
+    ui_file_confirm_check_update(FILE_CONFIRM_FORCE_REDRAW);
 
     DISPLAY_ON;
 
@@ -163,6 +166,7 @@ static void ui_menu_file(uint8_t cursor_8u_x) {
                 // Take undo snapshot first, in case user changes their mind
                 drawing_take_undo_snapshot();
                 drawing_restore_from_sram(SRAM_BANK_DRAWING_SAVES, app_state.save_slot_current);
+                ui_file_confirm_check_show();
                 break;
 
             case FILE_MENU_SAVE_SLOT_0:  // Fall through
@@ -180,6 +184,7 @@ static void ui_menu_file(uint8_t cursor_8u_x) {
             case FILE_MENU_SAVE:
             case FILE_MENU_SAVE2:  // Right half of 2 unit wide button
                     drawing_save_to_sram(SRAM_BANK_DRAWING_SAVES, app_state.save_slot_current);
+                    ui_file_confirm_check_show();
                     break;
         }
     }
@@ -227,7 +232,7 @@ static void ui_menu_right(uint8_t cursor_8u_y) {
             case RIGHT_MENU_DRAW_WIDTH_IND: ui_draw_width_cycle();
                                         break;
 
-            case RIGHT_MENU_SPEED:      ui_cursor_cycle_speed();                                        
+            case RIGHT_MENU_SPEED:      ui_cursor_cycle_speed();
                                         break;
 
             case RIGHT_MENU_CLEAR:      drawing_clear();
@@ -259,7 +264,7 @@ static void ui_swap_active_color(void) {
 
 void ui_undo_button_refresh(void) BANKED {
     if (app_state.undo_count > DRAW_UNDO_COUNT_NONE) {
-        // Enabled        
+        // Enabled
         move_sprite(SPRITE_ID_UNDO_BUTTON, UNDO_BUTTON_SPR_X, UNDO_BUTTON_SPR_Y);
     } else {
         // Disabled
@@ -270,7 +275,7 @@ void ui_undo_button_refresh(void) BANKED {
 
 void ui_redo_button_refresh(void) BANKED {
     if (app_state.redo_count > DRAW_REDO_COUNT_NONE) {
-        // Enabled        
+        // Enabled
         move_sprite(SPRITE_ID_REDO_BUTTON, REDO_BUTTON_SPR_X, REDO_BUTTON_SPR_Y);
     } else {
         // Disabled
@@ -312,3 +317,29 @@ void ui_draw_width_redraw_indicator(void) BANKED {
     move_sprite(SPRITE_ID_DRAW_WIDTH_IND, spr_x, DRAW_WIDTH_IND_SPR_Y);
 }
 
+
+static void ui_file_confirm_check_show(void) {
+    app_state.file_confirm_check_counter = FILE_CONFIRM_CHECK_COUNT_ENABLE;
+}
+
+
+void ui_file_confirm_check_update(bool force_redraw) BANKED {
+
+    if (app_state.file_confirm_check_counter) {
+
+        // Update display if first pass after enabling or a forced redraw such as after help screen or QR Code
+        if ((force_redraw) || (app_state.file_confirm_check_counter == FILE_CONFIRM_CHECK_COUNT_ENABLE)) {
+            // Enabled
+            move_sprite(SPRITE_ID_CONFIRM_CHECK, FILE_CONFIRM_CHECK_SPR_X(app_state.save_slot_current), FILE_CONFIRM_CHECK_SPR_Y);
+        }
+
+        app_state.file_confirm_check_counter--;
+        // Hide if done
+        if (app_state.file_confirm_check_counter == FILE_CONFIRM_CHECK_COUNT_OFF) {
+            hide_sprite(SPRITE_ID_CONFIRM_CHECK);
+        }
+    } else if (force_redraw) {
+        // Disabled
+        hide_sprite(SPRITE_ID_CONFIRM_CHECK);
+    }
+}
