@@ -30,6 +30,7 @@ void help_page_show(void) NONBANKED {
     // DISPLAY_ON;
 
     waitpadticked_lowcpu(J_ANY);
+    waitpadup();
 
     ui_redraw_after_qrcode();
     drawing_restore_undo_snapshot(UNDO_RESTORE_WITHOUT_REDO_SNAPSHOT);  // Don't create a Redo snapshot since it would be of the QRCode overlay on the drawing image
