@@ -49,6 +49,7 @@ Known **working** QRCode scanners:
 
 Known **not working** scanners:
 - "Camera" app on some Samsung phones
+- Default "Camera" app on iOS
 
 ### Browsers
 Known **working** Browsers:
