@@ -337,14 +337,22 @@ static inline void ui_cursor_teleport_update(bool cursor_in_drawing, uint16_t cu
 
     // TODO: J_SELECT instead?
     // Check for request to teleport between menus/drawing
-    if (KEY_TICKED(J_B) && (app_state.draw_tool_using_b_button_action == false))
-        ui_cursor_cycle_teleport();
+    if (KEY_RELEASED(UI_CURSOR_SPEED_BUTTON) && (app_state.draw_tool_using_b_button_action == false)) {
+        // Only teleport if not over the threshold to fast mode
+        // EMU_printf("B Len = %hu\n", (uint8_t)KEY_REPEAT_COUNT_LAST);
+        if (KEY_REPEAT_COUNT_LAST <= UI_CURSOR_TELLEPORT_THRESHOLD)
+            ui_cursor_cycle_teleport();
+    }
 }
 
 
 static void ui_process_input(bool cursor_in_drawing) {
 
     static uint16_t cursor_last_x, cursor_last_y;
+    static bool ui_cursor_fast_mode = false;
+
+    // Used for Teleport threshold gating
+    UPDATE_KEY_REPEAT(UI_CURSOR_SPEED_BUTTON);
 
     // First check for and apply any cursor teleport actions/updates
     ui_cursor_teleport_update(cursor_in_drawing, cursor_last_x, cursor_last_y);
@@ -352,7 +360,7 @@ static void ui_process_input(bool cursor_in_drawing) {
     cursor_last_x = app_state.cursor_x;
     cursor_last_y = app_state.cursor_y;
 
-    if (!cursor_in_drawing) {
+    if ((!cursor_in_drawing) || KEY_PRESSED(UI_CURSOR_SPEED_BUTTON)) {
         // For the main UI area there is only one speed of cursor movement (fast, with no inertia)
         if      (KEYS() & J_LEFT)  { if (app_state.cursor_x > CURSOR_SPEED_UI) app_state.cursor_x -= CURSOR_SPEED_UI; }
         else if (KEYS() & J_RIGHT) { if (app_state.cursor_x < (SCREEN_X_MAX_16U - CURSOR_SPEED_UI)) app_state.cursor_x += CURSOR_SPEED_UI; }

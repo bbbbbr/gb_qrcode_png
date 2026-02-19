@@ -9,7 +9,7 @@
 
 
 #define UI_ACTION_BUTTON            (J_A)
-#define UI_CURSOR_TELEPORT_BUTTON   (J_B)
+#define UI_CURSOR_SPEED_BUTTON      (J_B)
 #define UI_SHORTCUT_BUTTON          (J_SELECT)
 
 #define DRAW_MAIN_BUTTON            (J_A)
@@ -21,6 +21,11 @@
 #define DRAW_WIDTH_UP_BUTTON        (J_RIGHT)
 #define DRAW_WIDTH_DOWN_BUTTON      (J_LEFT)
 
+// Note these two thresholds overlap somewhat. That's ok.
+// It's to make the cursor speed threshold more responsive
+// and it shouldn't cause false positives on the teleport
+#define UI_CURSOR_FAST_MODE_THRESHOLD 3u  // Greater than this for faster cursor speed
+#define UI_CURSOR_TELLEPORT_THRESHOLD 9u  // Less than this for teleport action
 
 #define ALL_MENUS_BG_COLOR          (LTGREY)
 
@@ -139,7 +144,7 @@ enum {
     CURSOR_SPEED_MODE_FAST,
 
     CURSOR_SPEED_MODE_MAX = CURSOR_SPEED_MODE_FAST,
-    CURSOR_SPEED_MODE_DEFAULT = CURSOR_SPEED_MODE_FAST, // CURSOR_SPEED_MODE_MEDIUM,
+    CURSOR_SPEED_MODE_DEFAULT = CURSOR_SPEED_MODE_MEDIUM,
     CURSOR_SPEED_MODE_COUNT = ((CURSOR_SPEED_MODE_MAX - CURSOR_SPEED_MODE_MIN) + 1u)
 };
 

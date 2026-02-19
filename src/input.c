@@ -6,6 +6,7 @@
 uint8_t keys = 0x00;
 uint8_t previous_keys = 0x00;
 uint8_t key_repeat_count = 0x00;
+uint8_t key_repeat_count_last = 0x00;
 
 // Reduce CPU usage by only checking once per frame
 // Allows a loop control to be passed in
