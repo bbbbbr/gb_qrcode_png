@@ -13,6 +13,8 @@
 #include "ui_menu_area.h"
 #include "sprites.h"
 
+#include "gb-303hw.h"
+
 // Image data
 #include <ui_main_bg.h>      // BG APA style image
 #include <ui_main_bg_cde.h>  // BG APA style image  // CDE alternate theme
@@ -44,7 +46,7 @@ void ui_init(void) NONBANKED {
     uint8_t save_bank = CURRENT_BANK;
     SWITCH_ROM(BANK(sprites_img));
     set_sprite_data(SPRITE_TILE_MOUSE_START, SPRITE_CURSOR_COUNT,      SPRITE_CURSOR_TILE_DATA_START);
-    set_sprite_data(SPRITE_TILE_UNDO_BUTTON, SPRITE_UNDO_BUTTON_COUNT, SPRITE_UNDO_TILE_DATA_START);    
+    set_sprite_data(SPRITE_TILE_UNDO_BUTTON, SPRITE_UNDO_BUTTON_COUNT, SPRITE_UNDO_TILE_DATA_START);
     // Redo sprite uses undo sprite
     set_sprite_data(SPRITE_TILE_DRAW_WIDTH_IND, SPRITE_DRAW_WIDTH_IND_COUNT, SPRITE_DRAW_WIDTH_IND_TILE_DATA_START);
     set_sprite_data(SPRITE_TILE_CONFIRM_CHECK,  SPRITE_CONFIRM_CHECK_COUNT, SPRITE_CONFIRM_CHECK_TILE_DATA_START);
@@ -72,9 +74,40 @@ void ui_init(void) NONBANKED {
 }
 
 
+static void ui_update_gb_303_hardware(void) {
+    gb_303_read_potentiometers();
+
+    app_state.gb_303_active_last = app_state.gb_303_active;
+    // Knob 1 controls drawing thickness and acts as Action button to turn drawing on and off
+    if (pot1_delta != 0) {
+        app_state.gb_303_active = true;
+
+        if (pot1_avg > GB303_KNOB_WIDTH_3_THRESHOLD) {
+            app_state.draw_width = DRAW_WIDTH_MODE_3;
+            ui_draw_width_redraw_indicator();
+        } else if (pot1_avg > GB303_KNOB_WIDTH_2_THRESHOLD) {
+            app_state.draw_width = DRAW_WIDTH_MODE_2;
+            ui_draw_width_redraw_indicator();
+        } else { // if (pot1_avg > GB303_THRESH_ON) {
+            app_state.draw_width = DRAW_WIDTH_MODE_1;
+            ui_draw_width_redraw_indicator();
+        }
+
+        if (pot1_avg < GB303_THRESH_OFF) {
+            app_state.gb_303_active = false;
+        }
+    }
+}
+
+
 void ui_update(void) BANKED {
 
     ui_file_confirm_check_update(FILE_CONFIRM_NORMAL_UPDATE);
+
+    #ifdef HARDWARE_GB_303
+        ui_update_gb_303_hardware();
+    #endif
+
 
     if (KEY_PRESSED(UI_SHORTCUT_BUTTON)) {
         ui_cursor_speed_handle_input();
@@ -125,12 +158,12 @@ void ui_draw_width_cycle(void) BANKED {
 
 static void ui_draw_width_handle_input(void) {
 
-    if (KEY_TICKED(DRAW_WIDTH_UP_BUTTON)) {        
+    if (KEY_TICKED(DRAW_WIDTH_UP_BUTTON)) {
         if (app_state.draw_width < DRAW_WIDTH_MODE_MAX)
             app_state.draw_width++;
             ui_draw_width_redraw_indicator();
     }
-    else if (KEY_TICKED(DRAW_WIDTH_DOWN_BUTTON)) {        
+    else if (KEY_TICKED(DRAW_WIDTH_DOWN_BUTTON)) {
         if (app_state.draw_width > DRAW_WIDTH_MODE_MIN)
             app_state.draw_width--;
             ui_draw_width_redraw_indicator();
@@ -180,14 +213,14 @@ void ui_cursor_cycle_speed(void) BANKED {
 
 static void ui_cursor_speed_handle_input(void) {
 
-    if (KEY_TICKED(SPEED_UP_BUTTON)) {        
+    if (KEY_TICKED(SPEED_UP_BUTTON)) {
         if (app_state.cursor_speed_mode < CURSOR_SPEED_MODE_MAX) {
             app_state.cursor_speed_mode++;
             ui_cursor_speed_redraw_indicator();
             ui_cursor_speed_update_settings();
         }
     }
-    else if (KEY_TICKED(SPEED_DOWN_BUTTON)) {        
+    else if (KEY_TICKED(SPEED_DOWN_BUTTON)) {
         if (app_state.cursor_speed_mode > CURSOR_SPEED_MODE_MIN) {
             app_state.cursor_speed_mode--;
             ui_cursor_speed_redraw_indicator();
@@ -218,7 +251,7 @@ static void ui_cursor_teleport_save_zone(uint8_t teleport_zone_to_save) {
         //     app_state.cursor_menu_right_saved_y = app_state.cursor_y;
         //     break;
     }
-}    
+}
 
 void ui_cursor_cycle_teleport(void) BANKED {
 
@@ -307,7 +340,7 @@ static inline void ui_cursor_teleport_update(bool cursor_in_drawing, uint16_t cu
         // app_state.cursor_draw_saved_y = cursor_last_y;
 
         // When manually moving out of drawing to a menu, always set the zone to Max
-        // so that the next press will return to drawing. 
+        // so that the next press will return to drawing.
         // WARNING: If saving zone position is re-enabled then the version below should be used isntead
         app_state.cursor_teleport_zone = CURSOR_TELEPORT_MAX;
         //
@@ -357,8 +390,39 @@ static void ui_process_input(bool cursor_in_drawing) {
     // First check for and apply any cursor teleport actions/updates
     ui_cursor_teleport_update(cursor_in_drawing, cursor_last_x, cursor_last_y);
 
+
     cursor_last_x = app_state.cursor_x;
     cursor_last_y = app_state.cursor_y;
+
+    if (pot2_delta < 0) {
+        uint16_t delta_x = pot2_delta << 8;
+        if (app_state.cursor_x > -delta_x) {
+            app_state.cursor_x += delta_x;
+        }
+        else { app_state.cursor_x = 0; }
+    } else if (pot2_delta > 0) {
+        uint16_t delta_x = pot2_delta << 8;
+        if (app_state.cursor_x < (SCREEN_X_MAX_16U - delta_x)) {
+            app_state.cursor_x += delta_x;
+        }
+        else { app_state.cursor_x = SCREEN_X_MAX_16U; }
+    }
+
+    // Y is inverted to feel like the right direciton
+    if (pot3_delta < 0) {
+        uint16_t delta_y = -pot3_delta << 8;
+        if (app_state.cursor_y < (SCREEN_Y_MAX_16U - delta_y)) {
+            app_state.cursor_y += delta_y;
+        }
+        else { app_state.cursor_y = SCREEN_X_MAX_16U; }
+    } else if (pot3_delta > 0) {
+        uint16_t delta_y = -pot3_delta << 8;
+        if (app_state.cursor_y > -delta_y) {
+            app_state.cursor_y += delta_y;
+        }
+        else { app_state.cursor_y = 0; }
+    }
+
 
     if ((!cursor_in_drawing) || KEY_PRESSED(UI_CURSOR_SPEED_BUTTON)) {
         // For the main UI area there is only one speed of cursor movement (fast, with no inertia)

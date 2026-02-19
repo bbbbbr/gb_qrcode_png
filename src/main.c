@@ -58,7 +58,12 @@ void main(void)
 
     help_page_show();
 
+    // Need a clear here since the GB-303 doesn't have SRAM which means
+    // the restored drawing area is full of memory bus garbage
+
     SHOW_SPRITES;
+
+    drawing_clear();
 
     // Loop forever
     while(1) {

@@ -9,6 +9,9 @@
 #include "save_and_undo.h"
 #include "ui_main.h"
 
+#include "gb-303hw.h"
+
+
 #include <gbdk/emu_debug.h>  // Sensitive to duplicated line position across source files
 
 #pragma bank 255  // Autobanked
@@ -192,19 +195,20 @@ static void draw_tool_pencil_width_3(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
     line(min_x, max_y, max_x, max_y);
 }
 
-
 static void draw_tool_pencil(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
     // Start drawing
-    if (KEY_TICKED(DRAW_MAIN_BUTTON)) {
+    if ((KEY_TICKED(DRAW_MAIN_BUTTON)) || (GB303_WENT_ACTIVE)) {
         // Take a undo snapshot only at the start of a drawing segment
         if (tool_undo_snapshot_taken == false) {
             drawing_take_undo_snapshot();
             tool_undo_snapshot_taken = true;
+            tool_start_x = cursor_8u_x;
+            tool_start_y = cursor_8u_y;
         }
         app_state.tool_currently_drawing = true;
     }
-    else if (KEY_RELEASED(DRAW_MAIN_BUTTON)) {
+    else if ((KEY_RELEASED(DRAW_MAIN_BUTTON)) || (GB303_WENT_INACTIVE)) {
         // End Drawing
         tool_undo_snapshot_taken = false;
         app_state.tool_currently_drawing = false;
@@ -212,12 +216,27 @@ static void draw_tool_pencil(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
     // Draw if active
     if (app_state.tool_currently_drawing) {
-        if (app_state.draw_width == DRAW_WIDTH_MODE_1)
-            plot_point(cursor_8u_x, cursor_8u_y);
-        else if (app_state.draw_width == DRAW_WIDTH_MODE_2)
-            draw_tool_pencil_width_2(cursor_8u_x, cursor_8u_y);
-        else // Implied: DRAW_WIDTH_MODE_3
-            draw_tool_pencil_width_3(cursor_8u_x, cursor_8u_y);
+
+        if (app_state.gb_303_active) {
+            bool new_cursor_pos = ((cursor_8u_x != tool_start_x) || (cursor_8u_y != tool_start_y));
+
+            if (new_cursor_pos) {
+                if (app_state.draw_width == DRAW_WIDTH_MODE_1)
+                    line(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y);
+                else
+                    draw_tool_line_width_2_and_3(cursor_8u_x, cursor_8u_y);
+            }
+            tool_start_x = cursor_8u_x;
+            tool_start_y = cursor_8u_y;
+        } else {
+            // D-Pad drawing
+            if (app_state.draw_width == DRAW_WIDTH_MODE_1)
+                plot_point(cursor_8u_x, cursor_8u_y);
+            else if (app_state.draw_width == DRAW_WIDTH_MODE_2)
+                draw_tool_pencil_width_2(cursor_8u_x, cursor_8u_y);
+            else // Implied: DRAW_WIDTH_MODE_3
+                draw_tool_pencil_width_3(cursor_8u_x, cursor_8u_y);
+        }
     }
 }
 

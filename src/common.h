@@ -222,8 +222,15 @@ enum {
 };
 
 
+#define GB303_WENT_ACTIVE    (app_state.gb_303_active && !app_state.gb_303_active_last)
+#define GB303_WENT_INACTIVE  (!app_state.gb_303_active && app_state.gb_303_active_last)
+
 
 typedef struct app_state_t {
+
+    // == Hardware ==
+    bool gb_303_active;
+    bool gb_303_active_last;
 
     // == UI ==
     bool solaris_cde_ui_theme;

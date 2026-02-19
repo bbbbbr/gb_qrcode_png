@@ -31,6 +31,8 @@ LCCFLAGS += -Wl-j -autobank -Wm-yoA -Wm-ya4 -Wb-ext=.rel -Wb-v # MBC + Autobanki
 LCCFLAGS += -Wf-MMD -Wf-Wp-MP # Header file dependency output (-MMD) for Makefile use + per-header Phony rules (-MP)
 CFLAGS += -Wf-MMD -Wf-Wp-MP # Header file dependency output (-MMD) for Makefile use + per-header Phony rules (-MP)
 
+CFLAGS += -DHARDWARE_GB_303
+
 # Bankpack randomize test to check for potential banking errors
 # LCCFLAGS += -Wb-random -Wb-max=15
 

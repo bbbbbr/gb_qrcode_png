@@ -10,6 +10,10 @@ app_state_t app_state;
 
 void app_state_reset(void) BANKED {
 
+    // Hardware
+    app_state.gb_303_active = false;
+    app_state.gb_303_active_last = false;
+
     // UI Style
     app_state.solaris_cde_ui_theme = false;
 
