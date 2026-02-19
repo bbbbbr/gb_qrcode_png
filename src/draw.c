@@ -54,8 +54,18 @@ static uint8_t  tool_start_x, tool_start_y;
 static bool     tool_fillstyle = M_NOFILL;
 static bool     tool_undo_snapshot_taken = false;
 
-// For Flood-fill
-static int8_t * p_flood_queue = (int8_t *)SRAM_UPPER_B000; // Flood-fill Queue temp buffer is in SRAM shared with other uses
+#ifdef HARDWARE_GB_303
+    #include "qrcodegen.h"
+
+    #define qrcodegen_BUFFER_SZ  (QR_OUTPUT_ROW_SZ_BYTES * QR_FINAL_PIXEL_HEIGHT)
+    #define MAX_QR_PAYLOAD_SZ    (1840u + 2u)
+    extern uint8_t TMPBUFFER[qrcodegen_BUFFER_SZ];
+    static int8_t * p_flood_queue = TMPBUFFER;
+#else
+    // For Flood-fill
+    static int8_t * p_flood_queue = (int8_t *)SRAM_UPPER_B000; // Flood-fill Queue temp buffer is in SRAM shared with other uses
+#endif
+
 static uint16_t flood_queue_count = 0u;
 #define FLOOD_QUEUE_ENTRY_SIZE 4u  // Four bytes per flood-fill queue entry
 #define FILL_OUT_OF_MEMORY false
