@@ -15,6 +15,9 @@
 #include "base64.h"
 #include "qr_wrapper.h"
 
+#ifdef HARDWARE_GB_303
+    #include "qrcodegen.h"
+#endif
 
 
 // ===== START PNG TEST IMAGE =====
@@ -89,15 +92,30 @@ static uint16_t copy_1bpp_image_from_vram(uint8_t * p_out_buf) {
     return len;
 }
 
+#ifdef HARDWARE_GB_303
+    #define qrcodegen_BUFFER_SZ  (QR_OUTPUT_ROW_SZ_BYTES * QR_FINAL_PIXEL_HEIGHT)
+    #define MAX_QR_PAYLOAD_SZ    (1840u + 2u)
+    extern uint8_t TMPBUFFER[qrcodegen_BUFFER_SZ];
+    uint8_t working_buf[MAX_QR_PAYLOAD_SZ];
+#endif
 
 void image_to_png_qrcode_url(void) BANKED {
 
     SWITCH_RAM(SRAM_BANK_CALC_BUFFER);
 
-    // Output buffers in Cart SRAM, no need to allocate them
-    uint8_t * p_img_1bpp_buf       = (uint8_t *)SRAM_UPPER_B000; // Gets overwritten by Base64 encoded image
-    uint8_t * p_png_buf            = (uint8_t *)SRAM_BASE_A000;
-    uint8_t * p_base64_png_url_str = (uint8_t *)SRAM_UPPER_B000;
+    #ifdef HARDWARE_GB_303
+        // GB-303 lacks suitable SRAM
+        // Output buffers in Cart SRAM, no need to allocate them
+        uint8_t * p_img_1bpp_buf       = TMPBUFFER; // Gets overwritten by Base64 encoded image
+        uint8_t * p_png_buf            = working_buf;
+        uint8_t * p_base64_png_url_str = TMPBUFFER;
+
+    #else
+        // Output buffers in Cart SRAM, no need to allocate them
+        uint8_t * p_img_1bpp_buf       = (uint8_t *)SRAM_UPPER_B000; // Gets overwritten by Base64 encoded image
+        uint8_t * p_png_buf            = (uint8_t *)SRAM_BASE_A000;
+        uint8_t * p_base64_png_url_str = (uint8_t *)SRAM_UPPER_B000;
+    #endif
 
     // ===== Prepare image buffer =====
     EMU_printf("Generating Image\n");
