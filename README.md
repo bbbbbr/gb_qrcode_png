@@ -29,7 +29,9 @@ Downloadable ROM available on itch: https://bbbbbr.itch.io/game-boy-qr-paint
 Button Controls:
 - `D-Pad`: Move cursor
 - `A`: Draws with tool
-- `B`: Cancel tool action / Teleport cursor between menu and drawing areas
+- `B`:
+  - Short Press: Cancel tool action / Teleport cursor between menu and draw areas
+  - Hold Down: Move faster in draw area
 - `SELECT + UP/DOWN`: Adjust Cursor Speed
 - `SELECT + LEFT/RIGHT`: Adjust Drawing Width
 - `START`: Create QRCode
