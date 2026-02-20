@@ -335,8 +335,10 @@ static inline void ui_cursor_teleport_update(bool cursor_in_drawing, uint16_t cu
         update_cursor_style_to_draw();
     }
 
-    // TODO: J_SELECT instead?
     // Check for request to teleport between menus/drawing
+    //
+    // The trigger (KEY_RELEASED() or KEY_TICKED()) needs to match the cancel trigger
+    // used by the tools, otherwise it will get false triggers when they cancel
     if (KEY_RELEASED(UI_CURSOR_SPEED_BUTTON) && (app_state.draw_tool_using_b_button_action == false)) {
         // Only teleport if not over the threshold to fast mode
         // EMU_printf("B Len = %hu\n", (uint8_t)KEY_REPEAT_COUNT_LAST);

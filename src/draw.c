@@ -357,7 +357,7 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
         uint8_t current_action = DRAW_ACTION_IDLE;
         if      (KEY_TICKED(DRAW_MAIN_BUTTON))   current_action = DRAW_ACTION_FINALIZE;
-        else if (KEY_TICKED(DRAW_CANCEL_BUTTON)) current_action = DRAW_ACTION_CANCEL;
+        else if (KEY_RELEASED(DRAW_CANCEL_BUTTON)) current_action = DRAW_ACTION_CANCEL;
         else if (new_cursor_pos)                 current_action = DRAW_ACTION_NEW_DRAW_POSITION;
 
         // Un-draw from the last frame (XOR)
@@ -529,7 +529,7 @@ static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
         uint8_t current_action = DRAW_ACTION_IDLE;
         if      (KEY_TICKED(DRAW_MAIN_BUTTON))   current_action = DRAW_ACTION_FINALIZE;
-        else if (KEY_TICKED(DRAW_CANCEL_BUTTON)) current_action = DRAW_ACTION_CANCEL;
+        else if (KEY_RELEASED(DRAW_CANCEL_BUTTON)) current_action = DRAW_ACTION_CANCEL;
         else if ((cursor_8u_x != app_state.draw_cursor_8u_last_x) ||
                  (cursor_8u_y !=app_state.draw_cursor_8u_last_y)) current_action = DRAW_ACTION_NEW_DRAW_POSITION;
 
@@ -688,7 +688,7 @@ static void draw_tool_circle(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
         uint8_t current_action = DRAW_ACTION_IDLE;
         if      (KEY_TICKED(DRAW_MAIN_BUTTON))   current_action = DRAW_ACTION_FINALIZE;
-        else if (KEY_TICKED(DRAW_CANCEL_BUTTON)) current_action = DRAW_ACTION_CANCEL;
+        else if (KEY_RELEASED(DRAW_CANCEL_BUTTON)) current_action = DRAW_ACTION_CANCEL;
         else if ((cursor_8u_x != app_state.draw_cursor_8u_last_x) ||
                  (cursor_8u_y !=app_state.draw_cursor_8u_last_y)) current_action = DRAW_ACTION_NEW_DRAW_POSITION;
 
