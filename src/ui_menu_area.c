@@ -14,6 +14,7 @@
 #include "ui_menu_area.h"
 #include "save_and_undo.h"
 #include "help_screen.h"
+#include "print.h"
 
 #include <ui_main_bg.h>      // BG APA style image
 #include <ui_main_bg_cde.h>  // BG APA style image  // CDE alternate theme
@@ -38,6 +39,11 @@ static void ui_perform_undo(void);
 static void ui_perform_redo(void);
 
 static void ui_file_confirm_check_show(void);
+static void ui_print_confirm_check_show(void);
+static void ui_print_confirm_check_clear(void);
+
+static uint8_t ui_confirm_check_x = 0u;
+static uint8_t ui_confirm_check_y = 0u;
 
 // Draws the paint working area
 void ui_redraw_menus_all(void) NONBANKED {
@@ -66,7 +72,7 @@ void ui_redraw_menus_all(void) NONBANKED {
 
     ui_cursor_speed_redraw_indicator();
     ui_draw_width_redraw_indicator();
-    ui_file_confirm_check_update(FILE_CONFIRM_FORCE_REDRAW);
+    ui_confirm_check_update(UI_CONFIRM_FORCE_REDRAW);
 
     DISPLAY_ON;
 
@@ -77,32 +83,33 @@ void ui_handle_menu_area(uint8_t cursor_8u_x, uint8_t cursor_8u_y) BANKED {
 
     // TODO: OPTIMIZE: instead of dispatching on every cursor move, only dispatch to menus on button press?
 
-    // Check wide bottom menu first
-    if (cursor_8u_y > UI_BOTTOM_BORDER_START) {
-        if ((cursor_8u_x >= FILE_MENU_X_START) && (cursor_8u_x < FILE_MENU_X_END) &&
-            (cursor_8u_y >= FILE_MENU_Y_START) && (cursor_8u_y < FILE_MENU_Y_END)) {
-            ui_menu_file(cursor_8u_x);
-        }
-    } // Top title bar area
-    else if (cursor_8u_y < TITLE_BAR_MENU_Y_END) {
+    if (cursor_8u_y < TITLE_BAR_MENU_Y_END) {
         if ((cursor_8u_x >= HELP_BUTTON_X_START) && (cursor_8u_x < HELP_BUTTON_X_END) &&
             (cursor_8u_y >= HELP_BUTTON_Y_START) && (cursor_8u_y < HELP_BUTTON_Y_END)) {
             if (KEY_TICKED(UI_ACTION_BUTTON)) help_page_show();
         }
     } // Partition the screen left/right
-    else if (cursor_8u_x < (DEVICE_SCREEN_PX_WIDTH / 2u)) {
+    else if (cursor_8u_x <= TOOLS_MENU_X_END) {
         // Tools Menu
         if ((cursor_8u_x >= TOOLS_MENU_X_START) && (cursor_8u_x < TOOLS_MENU_X_END) &&
             (cursor_8u_y >= TOOLS_MENU_Y_START) && (cursor_8u_y < TOOLS_MENU_Y_END)) {
             ui_menu_tools(cursor_8u_y);
         }
-    } else {
+    } else if (cursor_8u_x >= RIGHT_MENU_X_START) {
         // File Menu
         if ((cursor_8u_x >= RIGHT_MENU_X_START) && (cursor_8u_x < RIGHT_MENU_X_END) &&
              (cursor_8u_y >= RIGHT_MENU_Y_START) && (cursor_8u_y < RIGHT_MENU_Y_END)) {
             ui_menu_right(cursor_8u_y);
         }
     }
+    // Bottom menu
+    else if (cursor_8u_y > UI_BOTTOM_BORDER_START) {
+        if ((cursor_8u_x >= FILE_MENU_X_START) && (cursor_8u_x < FILE_MENU_X_END) &&
+            (cursor_8u_y >= FILE_MENU_Y_START) && (cursor_8u_y < FILE_MENU_Y_END)) {
+            ui_menu_file(cursor_8u_x);
+        }
+    } // Top title bar area
+
 }
 
 
@@ -237,6 +244,11 @@ static void ui_menu_right(uint8_t cursor_8u_y) {
 
             case RIGHT_MENU_CLEAR:      drawing_clear();
                                         break;
+
+            case RIGHT_MENU_PRINT:      ui_print_confirm_check_show();
+                                        print_drawing();
+                                        ui_print_confirm_check_clear();
+                                        break;
         }
     }
 }
@@ -319,23 +331,36 @@ void ui_draw_width_redraw_indicator(void) BANKED {
 
 
 static void ui_file_confirm_check_show(void) {
-    app_state.file_confirm_check_counter = FILE_CONFIRM_CHECK_COUNT_ENABLE;
+    ui_confirm_check_x = FILE_CONFIRM_CHECK_SPR_X(app_state.save_slot_current);
+    ui_confirm_check_y = FILE_CONFIRM_CHECK_SPR_Y;
+    app_state.ui_confirm_check_counter = UI_CONFIRM_CHECK_COUNT_ENABLE;
+}
+
+static void ui_print_confirm_check_show(void) {
+    ui_confirm_check_x = PRINT_CONFIRM_CHECK_SPR_X;
+    ui_confirm_check_y = PRINT_CONFIRM_CHECK_SPR_Y;
+    app_state.ui_confirm_check_counter = UI_CONFIRM_CHECK_COUNT_ENABLE;
+    ui_confirm_check_update(UI_CONFIRM_NORMAL_UPDATE);
+}
+
+static void ui_print_confirm_check_clear(void) {
+    app_state.ui_confirm_check_counter = UI_CONFIRM_CHECK_COUNT_NEXT_OFF;
 }
 
 
-void ui_file_confirm_check_update(bool force_redraw) BANKED {
+void ui_confirm_check_update(bool force_redraw) BANKED {
 
-    if (app_state.file_confirm_check_counter) {
+    if (app_state.ui_confirm_check_counter) {
 
         // Update display if first pass after enabling or a forced redraw such as after help screen or QR Code
-        if ((force_redraw) || (app_state.file_confirm_check_counter == FILE_CONFIRM_CHECK_COUNT_ENABLE)) {
+        if ((force_redraw) || (app_state.ui_confirm_check_counter == UI_CONFIRM_CHECK_COUNT_ENABLE)) {
             // Enabled
-            move_sprite(SPRITE_ID_CONFIRM_CHECK, FILE_CONFIRM_CHECK_SPR_X(app_state.save_slot_current), FILE_CONFIRM_CHECK_SPR_Y);
+            move_sprite(SPRITE_ID_CONFIRM_CHECK, ui_confirm_check_x, ui_confirm_check_y);
         }
 
-        app_state.file_confirm_check_counter--;
+        app_state.ui_confirm_check_counter--;
         // Hide if done
-        if (app_state.file_confirm_check_counter == FILE_CONFIRM_CHECK_COUNT_OFF) {
+        if (app_state.ui_confirm_check_counter == UI_CONFIRM_CHECK_COUNT_OFF) {
             hide_sprite(SPRITE_ID_CONFIRM_CHECK);
         }
     } else if (force_redraw) {

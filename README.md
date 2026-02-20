@@ -22,6 +22,7 @@ Downloadable ROM available on itch: https://bbbbbr.itch.io/game-boy-qr-paint
 - Adjustable Draw Width
 - Adjustable Draw speed (Fast, Medium, Slow, Pixel Step)
 - 2 Draw colors (Black and White)
+- Game Boy Printer support
 
 
 ## Usage
@@ -81,7 +82,7 @@ drawing image that was exported as a QRCode.
 - Emulicious
 - ImHex
 
- he QRCode generator is an optimized fork of https://github.com/bbbbbr/gameboy_qrcode which is a fork of msx_qrcode https://github.com/MartinezTorres/msx_qrcode/tree/master
+The QRCode generator is an optimized fork of https://github.com/bbbbbr/gameboy_qrcode which is a fork of msx_qrcode https://github.com/MartinezTorres/msx_qrcode/tree/master
 
 Which in turn is a fork of Nayuki's QR Code: https://github.com/nayuki/QR-Code-generator
 

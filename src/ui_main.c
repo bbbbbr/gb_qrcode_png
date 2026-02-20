@@ -74,7 +74,7 @@ void ui_init(void) NONBANKED {
 
 void ui_update(void) BANKED {
 
-    ui_file_confirm_check_update(FILE_CONFIRM_NORMAL_UPDATE);
+    ui_confirm_check_update(UI_CONFIRM_NORMAL_UPDATE);
 
     if (KEY_PRESSED(UI_SHORTCUT_BUTTON)) {
         ui_cursor_speed_handle_input();

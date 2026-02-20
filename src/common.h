@@ -35,11 +35,12 @@
 #define FILE_MENU_BG_COLOR         (ALL_MENUS_BG_COLOR)
 #define FILE_MENU_HIGHLIGHT_COLOR  (DKGREY)
 
-#define FILE_CONFIRM_CHECK_COUNT_OFF      0u
-#define FILE_CONFIRM_CHECK_COUNT_ENABLE  60u  // display for 60 frames
-#define FILE_CONFIRM_CHECK_COUNT_RESET   (FILE_CONFIRM_CHECK_COUNT_OFF)
-#define FILE_CONFIRM_FORCE_REDRAW        true
-#define FILE_CONFIRM_NORMAL_UPDATE       false
+#define UI_CONFIRM_CHECK_COUNT_OFF      0u
+#define UI_CONFIRM_CHECK_COUNT_NEXT_OFF ((UI_CONFIRM_CHECK_COUNT_OFF) + 1u)
+#define UI_CONFIRM_CHECK_COUNT_ENABLE  60u  // display for 60 frames
+#define UI_CONFIRM_CHECK_COUNT_RESET   (UI_CONFIRM_CHECK_COUNT_OFF)
+#define UI_CONFIRM_FORCE_REDRAW        true
+#define UI_CONFIRM_NORMAL_UPDATE       false
 
 #define DRAW_SAVE_SLOT_MIN     0u
 #define DRAW_SAVE_SLOT_MAX     2u
@@ -98,6 +99,9 @@
 
 #define IMG_X_END         ((IMG_X_START + IMG_WIDTH_PX)  - 1u)
 #define IMG_Y_END         ((IMG_Y_START + IMG_HEIGHT_PX) - 1u)
+
+#define IMG_TILE_X_END    ((IMG_X_END) / TILE_SZ_PX)
+#define IMG_TILE_Y_END    ((IMG_Y_END) / TILE_SZ_PX)
 
 // SRAM used for working buffers
 #define SRAM_BASE_A000  0xA000u
@@ -199,8 +203,9 @@ enum {
     RIGHT_MENU_DRAW_WIDTH_IND,
     RIGHT_MENU_SPEED,
     RIGHT_MENU_CLEAR,
+    RIGHT_MENU_PRINT,
 
-    RIGHT_MENU_MAX   = RIGHT_MENU_CLEAR,
+    RIGHT_MENU_MAX   = RIGHT_MENU_PRINT,
     RIGHT_MENU_COUNT = (RIGHT_MENU_MAX + 1u),
 };
 
@@ -230,7 +235,7 @@ typedef struct app_state_t {
 
     // == Save and undo ==
     uint8_t save_slot_current;
-    uint8_t file_confirm_check_counter;
+    uint8_t ui_confirm_check_counter;
 
     uint8_t undo_count;
     uint8_t redo_count;

@@ -15,7 +15,7 @@ void app_state_reset(void) BANKED {
 
     // Save and Undo related
     app_state.save_slot_current = DRAW_SAVE_SLOT_DEFAULT;
-    app_state.file_confirm_check_counter = FILE_CONFIRM_CHECK_COUNT_RESET;
+    app_state.ui_confirm_check_counter = UI_CONFIRM_CHECK_COUNT_RESET;
 
     app_state.undo_count        = DRAW_UNDO_COUNT_NONE;
     app_state.redo_count        = DRAW_REDO_COUNT_NONE;

@@ -100,6 +100,12 @@
 
     #define DRAW_WIDTH_SPR_STEP_X               7u
 
+    // Print
+    // File confirm check sprite
+    #define PRINT_CONFIRM_CHECK_SPR_X           ((RIGHT_MENU_X_START) + 3u + DEVICE_SPRITE_PX_OFFSET_Y)
+    #define PRINT_CONFIRM_CHECK_SPR_Y           ((RIGHT_MENU_Y_START + ((RIGHT_MENU_PRINT - 1u) * RIGHT_MENU_ITEM_HEIGHT) + 17u) + DEVICE_SPRITE_PX_OFFSET_Y)
+
+
 // ===== (BOTTOM) FILE MENU =====
 
 #define FILE_MENU_ITEM_WIDTH  16u
@@ -134,6 +140,6 @@ void ui_redo_button_refresh(void) BANKED;
 void ui_cursor_speed_redraw_indicator(void) NONBANKED;
 void ui_draw_width_redraw_indicator(void) BANKED;
 
-void ui_file_confirm_check_update(bool force_redraw) BANKED;
+void ui_confirm_check_update(bool force_redraw) BANKED;
 
 #endif // UI_MAIN_AREA_H
