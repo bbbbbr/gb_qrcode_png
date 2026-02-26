@@ -3,6 +3,7 @@
 ## Version 0.92
 - Added SGB Mouse support
 - Added SGB border
+- Fixed crash with circle diameter 1 pixel and thickest draw width
 
 ## Version 0.91
 - Added Game Boy Printer support

@@ -634,7 +634,10 @@ static void draw_tool_rect_circle_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u
 
         //
         circle(tool_start_x, tool_start_y, radius + 1u, tool_fillstyle);
-        circle(tool_start_x, tool_start_y, radius - 1u, tool_fillstyle);
+        // Radius 0 crashes gbdk circle draw, so only draw inner if radius wouldn't become 0
+        if (radius >= 2) {
+            circle(tool_start_x, tool_start_y, radius - 1u, tool_fillstyle);
+        }
         circle(tool_start_x - 1u, tool_start_y,      radius, tool_fillstyle);
         circle(tool_start_x     , tool_start_y - 1u, radius, tool_fillstyle);
         circle(tool_start_x + 1u, tool_start_y,      radius, tool_fillstyle);
