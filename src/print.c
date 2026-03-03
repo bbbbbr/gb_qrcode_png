@@ -27,6 +27,9 @@ void print_drawing(void) BANKED {
     color(WHITE, BLACK, SOLID);
     gotogxy(5u,4u);
 
+    // Printing may be more reliable at DMG link speed
+    if (_cpu == CGB_TYPE) cpu_slow();
+
     bool printer_found = gbprinter_detect(PRINTER_DETECT_TIMEOUT) == PRN_STATUS_OK;
     if (printer_found) {
         // gbprinter_print_screen_apa(IMG_TILE_X_START, IMG_TILE_Y_START, IMG_TILE_X_END, IMG_TILE_Y_END);
@@ -39,6 +42,8 @@ void print_drawing(void) BANKED {
         gotogxy(5u,5u);        
         gprintf("Not Found");
     }
+
+    if (_cpu == CGB_TYPE) cpu_fast();
 
     waitpadup_lowcpu(J_ALL);
     waitpadticked_lowcpu(J_ANY);
