@@ -13,6 +13,8 @@
 
 #pragma bank 255  // Autobanked
 
+static void display_result(char * str1, char * str2);
+
 
 bool printer_check_cancel(void) BANKED {
     UPDATE_KEYS();
@@ -20,12 +22,18 @@ bool printer_check_cancel(void) BANKED {
 }
 
 
+static void display_result(char * str1, char * str2) {
+    color(WHITE, BLACK, SOLID);
+    gotogxy(5u,4u);
+    gprintf(str1);
+    gotogxy(5u,5u);
+    gprintf(str2);
+}
+
+
 void print_drawing(void) BANKED {
 
     drawing_take_undo_snapshot();  // This clears out any Redo queue entries that might be present
-
-    color(WHITE, BLACK, SOLID);
-    gotogxy(5u,4u);
 
     // Printing may be more reliable at DMG link speed
     if (_cpu == CGB_TYPE) cpu_slow();
@@ -33,14 +41,14 @@ void print_drawing(void) BANKED {
     bool printer_found = gbprinter_detect(PRINTER_DETECT_TIMEOUT) == PRN_STATUS_OK;
     if (printer_found) {
         // gbprinter_print_screen_apa(IMG_TILE_X_START, IMG_TILE_Y_START, IMG_TILE_X_END, IMG_TILE_Y_END);
-        gbprinter_print_screen_rect(IMG_TILE_X_START, IMG_TILE_Y_START, IMG_WIDTH_TILES, IMG_HEIGHT_TILES, true);
-        gprintf("Printing");
-        gotogxy(5u,5u);        
-        gprintf("Done");
+        uint8_t status = gbprinter_print_screen_rect(IMG_TILE_X_START, IMG_TILE_Y_START, IMG_WIDTH_TILES, IMG_HEIGHT_TILES, true);
+
+        // Treat only high-nibble printer error bits as fatal.
+        // Some printers may report non-fatal low bits after a successful print.
+        if (status & PRN_STATUS_MASK_ERRORS) display_result("Printing", "Failed");
+        else                                 display_result("Printing", "Done");
     } else {
-        gprintf("Printer");
-        gotogxy(5u,5u);        
-        gprintf("Not Found");
+        display_result("Printer", "Not Found");
     }
 
     if (_cpu == CGB_TYPE) cpu_fast();
