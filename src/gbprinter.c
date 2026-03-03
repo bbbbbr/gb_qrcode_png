@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "gbprinter.h"
+#include "save_and_undo.h"
 
 #pragma bank 255  // Autobanked
 
@@ -118,8 +119,10 @@ uint8_t gbprinter_detect(uint8_t delay) BANKED {
 #define APA_TILE_NUM_UPPER_START   (128u)
 
 // Prints the requested tile region of the screen in APA mode, tiles outside the screen are printed WHITE
-uint8_t gbprinter_print_screen_rect(uint8_t sx, uint8_t sy, uint8_t sw, uint8_t sh, uint8_t centered) BANKED {
+uint8_t gbprinter_print_screen_rect_from_undo(uint8_t sx, uint8_t sy, uint8_t sw, uint8_t sh, uint8_t centered) BANKED {
     static uint8_t error;
+
+    uint8_t * p_undo_tile_data = undo_get_last_snapshot_addr();
 
     // call printer progress: zero progress
     printer_completion = 0; // call_far(&printer_progress_handler);
@@ -132,13 +135,20 @@ uint8_t gbprinter_print_screen_rect(uint8_t sx, uint8_t sy, uint8_t sw, uint8_t 
     if ((sw == 0u) || (sh == 0u)) return PRN_STATUS_OK;
 
     for (uint8_t y = 0; y != rows; y++) {
-        uint8_t * map_addr = get_bkg_xy_addr(sx, y + sy);
+        // uint8_t * map_addr = get_bkg_xy_addr(sx, y + sy);
         for (uint8_t x = 0; x != PRN_TILE_WIDTH; x++) {
             if ((x >= x_ofs) && (x < (x_ofs + sw)) && (y < sh))  {
 
-                uint8_t tile = get_vram_byte(map_addr++);
-                uint8_t * source = (((y + sy) >= APA_TILE_SRC_TOGGLE_TILE_Y) && (tile < APA_TILE_NUM_UPPER_START)) ? _VRAM9000 : _VRAM8000;
-                vmemcpy(tile_data, source + ((uint16_t)tile << 4), sizeof(tile_data));
+                // uint8_t tile = get_vram_byte(map_addr++);
+                // uint8_t * source = (((y + sy) >= APA_TILE_SRC_TOGGLE_TILE_Y) && (tile < APA_TILE_NUM_UPPER_START)) ? _VRAM9000 : _VRAM8000;
+                // vmemcpy(tile_data, source + ((uint16_t)tile << 4), sizeof(tile_data));
+
+                // Since the undo snapshot contains Only and All of
+                // the tiles we want, in sequential order, they can
+                // be iterated through serially instead of checking
+                // the map and then looking them up based on that
+                memcpy(tile_data, p_undo_tile_data, sizeof(tile_data));
+                p_undo_tile_data += TILE_BYTES_SZ;
 
             } else memset(tile_data, 0x00, sizeof(tile_data));
             if (printer_print_tile(tile_data)) {

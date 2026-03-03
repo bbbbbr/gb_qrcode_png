@@ -24,6 +24,7 @@
 
 
 static inline uint8_t get_next_undo_slot(void);
+static inline uint8_t get_previous_undo_slot(void);
 
 #define CALC_SRAM_BANK_AND_SLOT(slotnum, bankvar, slotvar) \
     bankvar = SRAM_BANK_UNDO_SNAPSHOTS_LO; \
@@ -32,6 +33,18 @@ static inline uint8_t get_next_undo_slot(void);
         bankvar = SRAM_BANK_UNDO_SNAPSHOTS_HI; \
         slotvar -= DRAW_UNDO_SLOTS_PER_SRAM_BANK; \
     }
+
+
+// Retrieve the memory address containing the last taken undo snapshot
+// Also switches in relevant SRAM bank
+uint8_t * undo_get_last_snapshot_addr(void) BANKED {
+
+    uint8_t sram_bank, sram_slot;
+    CALC_SRAM_BANK_AND_SLOT(get_previous_undo_slot(), sram_bank, sram_slot);
+    SWITCH_RAM(sram_bank);
+
+    return (uint8_t *)(SRAM_BASE_A000 + (DRAW_SAVE_SLOT_SIZE * sram_slot));
+}
 
 
 void drawing_save_to_sram(uint8_t sram_bank, uint8_t save_slot) BANKED {
