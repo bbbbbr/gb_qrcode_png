@@ -140,6 +140,7 @@ inline void gbprinter_set_print_params(uint8_t margins, uint8_t palette, uint8_t
 
 uint8_t gbprinter_detect(uint8_t delay) BANKED;
 // uint8_t gbprinter_print_image(const uint8_t * image_map, const uint8_t * image, int8_t pos_x, uint8_t width, uint8_t height) BANKED;
-uint8_t gbprinter_print_screen_rect_from_undo(uint8_t sx, uint8_t sy, uint8_t sw, uint8_t sh, uint8_t centered) BANKED;
+// uint8_t gbprinter_print_screen_rect_from_undo(uint8_t sx, uint8_t sy, uint8_t sw, uint8_t sh, uint8_t centered) BANKED;
+uint8_t gbprinter_print_screen_rect_from_undo(void) BANKED;
 
 #endif

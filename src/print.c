@@ -44,7 +44,8 @@ void print_drawing(void) BANKED {
     bool printer_found = gbprinter_detect(PRINTER_DETECT_TIMEOUT) == PRN_STATUS_OK;
     if (printer_found) {
         // gbprinter_print_screen_apa(IMG_TILE_X_START, IMG_TILE_Y_START, IMG_TILE_X_END, IMG_TILE_Y_END);
-        uint8_t status = gbprinter_print_screen_rect_from_undo(IMG_TILE_X_START, IMG_TILE_Y_START, IMG_WIDTH_TILES, IMG_HEIGHT_TILES, true);
+        // uint8_t status = gbprinter_print_screen_rect_from_undo(IMG_TILE_X_START, IMG_TILE_Y_START, IMG_WIDTH_TILES, IMG_HEIGHT_TILES, true);
+        uint8_t status = gbprinter_print_screen_rect_from_undo();
 
         // Treat only high-nibble printer error bits as fatal.
         // Some printers may report non-fatal low bits after a successful print.

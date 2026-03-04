@@ -5,6 +5,7 @@
 
 #include "gbprinter.h"
 #include "save_and_undo.h"
+#include "common.h"
 
 #pragma bank 255  // Autobanked
 
@@ -119,8 +120,16 @@ uint8_t gbprinter_detect(uint8_t delay) BANKED {
 #define APA_TILE_NUM_UPPER_START   (128u)
 
 // Prints the requested tile region of the screen in APA mode, tiles outside the screen are printed WHITE
-uint8_t gbprinter_print_screen_rect_from_undo(uint8_t sx, uint8_t sy, uint8_t sw, uint8_t sh, uint8_t centered) BANKED {
+// uint8_t gbprinter_print_screen_rect_from_undo(uint8_t sx, uint8_t sy, uint8_t sw, uint8_t sh, uint8_t centered) BANKED {
+uint8_t gbprinter_print_screen_rect_from_undo(void) BANKED {
     static uint8_t error;
+
+    // Printing from an undo snapshot means the size of the image is fixed
+    const uint8_t sx = IMG_TILE_X_START;
+    const uint8_t sy = IMG_TILE_Y_START;
+    const uint8_t sw = IMG_WIDTH_TILES;
+    const uint8_t sh = IMG_HEIGHT_TILES;
+    const uint8_t centered = true;
 
     uint8_t * p_undo_tile_data = undo_get_last_snapshot_addr();
 
@@ -132,7 +141,7 @@ uint8_t gbprinter_print_screen_rect_from_undo(uint8_t sx, uint8_t sy, uint8_t sw
     printer_tile_num = 0;
 
     // Return early if the area to print is zero
-    if ((sw == 0u) || (sh == 0u)) return PRN_STATUS_OK;
+    // if ((sw == 0u) || (sh == 0u)) return PRN_STATUS_OK;
 
     for (uint8_t y = 0; y != rows; y++) {
         // uint8_t * map_addr = get_bkg_xy_addr(sx, y + sy);
@@ -151,6 +160,10 @@ uint8_t gbprinter_print_screen_rect_from_undo(uint8_t sx, uint8_t sy, uint8_t sw
                 p_undo_tile_data += TILE_BYTES_SZ;
 
             } else memset(tile_data, 0x00, sizeof(tile_data));
+
+            // Send tile to printer
+            // On first tile, a packet header is emitted beforehand
+            // On last tile (40 tiles, 2 screen tile rows) it completes the packet (and the call returns true)
             if (printer_print_tile(tile_data)) {
                 pkt_count++;
                 if (printer_check_cancel()) {
@@ -158,9 +171,14 @@ uint8_t gbprinter_print_screen_rect_from_undo(uint8_t sx, uint8_t sy, uint8_t sw
                     return PRN_STATUS_CANCELLED;
                 }
             }
+
+            // Once 18 tile rows have been printed (9 x 2 per print packet)
+            // Send the EOF and then Print commands
             if (pkt_count == 9) {
                 pkt_count = 0;
                 RET_ERR_IF_FAIL(PRINTER_SEND_COMMAND(PRN_PKT_EOF));
+                // Some emulators don't set PRN_STATUS_FULL bit until PRN_PKT_START, so this may fail on them.
+                // It also seems optional since some OEM games skip this check and call print immediately.
                 RET_ERR_IF_FAIL(printer_wait(PRN_FULL_TIMEOUT, PRN_STATUS_FULL, PRN_STATUS_FULL));
 
                 gbprinter_set_print_params((y == (rows - 1)) ? PRN_FINAL_MARGIN : PRN_NO_MARGINS, PRN_PALETTE_NORMAL, PRN_EXPOSURE_DARK);
@@ -183,8 +201,11 @@ uint8_t gbprinter_print_screen_rect_from_undo(uint8_t sx, uint8_t sy, uint8_t sw
             }
         }
     }
+
+    // End of printing, finalize any data that hasn't been printed
     if (pkt_count) {
         RET_ERR_IF_FAIL(PRINTER_SEND_COMMAND(PRN_PKT_EOF));
+        // See earlier comment about PRN_STATUS_FULL
         RET_ERR_IF_FAIL(printer_wait(PRN_FULL_TIMEOUT, PRN_STATUS_FULL, PRN_STATUS_FULL));
 
         // setup printing if required
