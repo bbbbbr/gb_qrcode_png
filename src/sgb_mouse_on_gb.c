@@ -3,21 +3,20 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "sgb_mouse_on_gb.h"
 #include "input.h"
 
-#include <gb/drawing.h>
+#include "sgb_mouse_on_gb.h"
 
 #pragma bank 255  // Autobanked
 
 #define SGB_PACKET_SIZE 16u
 #define SGB_PAYLOAD_LEN (SGB_PACKET_SIZE - 1u)
 
-int8_t  mouse_x_move;
-int8_t  mouse_y_move;
+int8_t  mouse_x_move = 0;
+int8_t  mouse_y_move = 0;
 int8_t  mouse_x_move_last = 0;
 int8_t  mouse_y_move_last = 0;
-uint8_t mouse_buttons;
+uint8_t mouse_buttons = 0u;
 uint8_t mouse_buttons_last = 0u;
 
 // MouseHook:

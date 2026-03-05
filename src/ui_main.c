@@ -446,7 +446,6 @@ static void ui_handle_input_sgb_mouse(bool cursor_in_drawing) {
 
     if (sgb_mouse_input_is_valid) {
 
-        uint8_t mouse_move_upshift;
         if ((!cursor_in_drawing) || KEY_PRESSED(UI_CURSOR_SPEED_BUTTON)) {
             delta_x = mouse_x_move << MOUSE_ACCEL_UPSHIFT_FAST;
             delta_y = mouse_y_move << MOUSE_ACCEL_UPSHIFT_FAST;
