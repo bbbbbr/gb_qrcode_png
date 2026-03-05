@@ -6,12 +6,14 @@
 #include "input.h"
 
 #include "img_2_qrcode.h"
-#include "sgb_features.h"
 #include "draw.h"
 #include "ui_main.h"
 #include "save_and_undo.h"
 #include "help_screen.h"
 
+#if defined(GAMEBOY) || defined(ANALOGUEPOCKET)
+    #include "gb/sgb_features.h"
+#endif
 
 void make_and_show_qrcode(void);
 void sgb_check_and_init(void);
@@ -45,8 +47,10 @@ void make_and_show_qrcode(void) {
 
 void main(void)
 {
-    // Call SGB init before everything else
-    sgb_check_and_init();
+    #if defined(GAMEBOY) || defined(ANALOGUEPOCKET)
+        // Call SGB init before everything else
+        sgb_check_and_init();
+    #endif
 
     HIDE_SPRITES;
     ENABLE_RAM;

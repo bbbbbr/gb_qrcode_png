@@ -3,9 +3,10 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "../save_and_undo.h"
+#include "../common.h"
+
 #include "gbprinter.h"
-#include "save_and_undo.h"
-#include "common.h"
 
 #pragma bank 255  // Autobanked
 

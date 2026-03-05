@@ -2,13 +2,12 @@
 #include <gb/sgb.h>
 #include <stdint.h>
 
-#include "platform_cart_type.h"
-#include "common.h"
-#include "input.h"
+#include "../platform_cart_type.h"
+#include "../common.h"
+#include "../input.h"
+#include "../sgb_mouse_on_gb.h"
 
-#include "sgb_mouse_on_gb.h"
 #include "sgb_border.h"
-
 #include "sgb_border_img.h"
 
 

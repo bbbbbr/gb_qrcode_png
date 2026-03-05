@@ -7,8 +7,9 @@
 
 #include "ui_main.h"
 #include "save_and_undo.h"
-#include "gbprinter.h"
-
+#if defined(GAMEBOY) || defined(ANALOGUEPOCKET)
+    #include "gb/gbprinter.h"
+#endif
 
 
 #pragma bank 255  // Autobanked
@@ -41,19 +42,21 @@ void print_drawing(void) BANKED {
     // Printing may be more reliable at DMG link speed
     if (_cpu == CGB_TYPE) cpu_slow();
 
-    bool printer_found = gbprinter_detect(PRINTER_DETECT_TIMEOUT) == PRN_STATUS_OK;
-    if (printer_found) {
-        // gbprinter_print_screen_apa(IMG_TILE_X_START, IMG_TILE_Y_START, IMG_TILE_X_END, IMG_TILE_Y_END);
-        // uint8_t status = gbprinter_print_screen_rect_from_undo(IMG_TILE_X_START, IMG_TILE_Y_START, IMG_WIDTH_TILES, IMG_HEIGHT_TILES, true);
-        uint8_t status = gbprinter_print_screen_rect_from_undo();
+    #if defined(GAMEBOY) || defined(ANALOGUEPOCKET)
+        bool printer_found = gbprinter_detect(PRINTER_DETECT_TIMEOUT) == PRN_STATUS_OK;
+        if (printer_found) {
+            // gbprinter_print_screen_apa(IMG_TILE_X_START, IMG_TILE_Y_START, IMG_TILE_X_END, IMG_TILE_Y_END);
+            // uint8_t status = gbprinter_print_screen_rect_from_undo(IMG_TILE_X_START, IMG_TILE_Y_START, IMG_WIDTH_TILES, IMG_HEIGHT_TILES, true);
+            uint8_t status = gbprinter_print_screen_rect_from_undo();
 
-        // Treat only high-nibble printer error bits as fatal.
-        // Some printers may report non-fatal low bits after a successful print.
-        if (status & PRN_STATUS_MASK_ERRORS) display_result("Failed");
-        else                                 display_result("Done");
-    } else {
-        display_result("Not Found");
-    }
+            // Treat only high-nibble printer error bits as fatal.
+            // Some printers may report non-fatal low bits after a successful print.
+            if (status & PRN_STATUS_MASK_ERRORS) display_result("Failed");
+            else                                 display_result("Done");
+        } else {
+            display_result("Not Found");
+        }
+    #endif
 
     if (_cpu == CGB_TYPE) cpu_fast();
 

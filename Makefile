@@ -81,6 +81,7 @@ PACKAGE_DIR = "../build_archive/$(VERSION)"
 
 # EXT?=gb # Only sets extension to default (game boy .gb) if not populated
 SRCDIR      = src
+PLAT_SRCDIR = $(SRCDIR)/$(PLAT_SRC_NAME)
 OBJDIR      = obj/$(EXT)$(PLAT_SUB_EXT)
 RESOBJSRC   = $(OBJDIR)/res
 RESDIR      = res
@@ -97,6 +98,7 @@ IMGOBJS     = $(IMGSOURCES:$(RESOBJSRC)/%.c=$(OBJDIR)/%.o)
 
 BINS	    = $(OBJDIR)/$(PROJECTNAME).$(EXT)$(PLAT_SUB_EXT)
 CSOURCES    = $(foreach dir,$(SRCDIR),$(notdir $(wildcard $(dir)/*.c))) $(foreach dir,$(RESDIR),$(notdir $(wildcard $(dir)/*.c)))
+CSOURCES    += $(foreach dir,$(PLAT_SRCDIR),$(notdir $(wildcard $(dir)/*.c)))
 
 ASMSOURCES  = $(foreach dir,$(SRCDIR),$(notdir $(wildcard $(dir)/*.s)))
 OBJS        = $(CSOURCES:%.c=$(OBJDIR)/%.o) $(ASMSOURCES:%.s=$(OBJDIR)/%.o)
@@ -125,6 +127,10 @@ $(OBJDIR)/%.o:	$(RESOBJSRC)/%.c
 $(OBJDIR)/%.o:	$(SRCDIR)/%.c
 	$(LCC) $(CFLAGS) -c -o $@ $<
 
+# Compile .c files in "src/" to .o object files
+$(OBJDIR)/%.o:	$(PLAT_SRCDIR)/%.c
+	$(LCC) $(CFLAGS) -c -o $@ $<
+
 # Compile .c files in "res/" to .o object files
 $(OBJDIR)/%.o:	$(RESDIR)/%.c
 	$(LCC) $(CFLAGS) -c -o $@ $<
@@ -143,8 +149,6 @@ $(OBJS):	$(IMGOBJS)
 
 # Link the compiled object files into a .gb ROM file
 $(BINS):	$(OBJS)
-	@echo EXT= $$(BINS)
-	@echo CART_TYPE= $(CART_TYPE)
 	$(LCC) $(LCCFLAGS) -o $(BINDIR)/$(PROJECTNAME).$(EXT)$(PLAT_SUB_EXT) $(OBJS) $(IMGOBJS)
 
 # Special build of for megaduck to run from an MBC5 cart
