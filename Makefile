@@ -49,8 +49,8 @@ endif
 
 ifeq ($(PLAT),duck)
 	PLAT_SUB_EXT=.$(CART_TYPE)
+	CFLAGS += -DCART_TYPE_$(CART_TYPE)=1
 endif
-CFLAGS += -DCART_TYPE_$(CART_TYPE)=1
 
 # Higher optimization (slow builds)
 # LCCFLAGS += -Wf--max-allocs-per-node200000
