@@ -7,6 +7,7 @@
 #include <string.h>
 
 
+#include "platform_cart_type.h"
 #include "common.h"
 #include "qrcodegen.h"
 
@@ -39,13 +40,13 @@ bool qr_generate(const char * embed_str, uint16_t len) BANKED {
     // from auto-banking (due to use of qr_get() which may be in another bank)
     //
     // uint8_t save_bank = CURRENT_BANK;
-    // SWITCH_ROM(BANK(qrcodegen));
+    // PLAT_SWITCH_ROM(BANK(qrcodegen));
 
     EMU_PROFILE_BEGIN(" QRCode Gen prof start ");
     qrcodegen(embed_str, len);
     EMU_PROFILE_END(" QRCode Gen prof end: ");
 
-    // SWITCH_ROM(save_bank);
+    // PLAT_SWITCH_ROM(save_bank);
 
     return true;
 }
@@ -61,7 +62,7 @@ void qr_render(void) BANKED {
     // from auto-banking (due to use of qr_get() which may be in another bank)
     //    
     // uint8_t save_bank = CURRENT_BANK;
-    // SWITCH_ROM(BANK(qrcodegen));
+    // PLAT_SWITCH_ROM(BANK(qrcodegen));
 
     #if SCALE == 1
         // qr_render_scale_1_apa();
@@ -72,7 +73,7 @@ void qr_render(void) BANKED {
     #endif
 
     EMU_PROFILE_END(" QRCode Render prof end: ");
-    // SWITCH_ROM(save_bank);
+    // PLAT_SWITCH_ROM(save_bank);
 }
 
 

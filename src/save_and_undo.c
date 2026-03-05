@@ -3,6 +3,7 @@
 
 #include <gbdk/emu_debug.h>  // Sensitive to duplicated line position across source files
 
+#include "platform_cart_type.h"
 #include "common.h"
 #include "save_and_undo.h"
 #include "ui_menu_area.h"
@@ -41,7 +42,7 @@ uint8_t * undo_get_last_snapshot_addr(void) BANKED {
 
     uint8_t sram_bank, sram_slot;
     CALC_SRAM_BANK_AND_SLOT(get_previous_undo_slot(), sram_bank, sram_slot);
-    SWITCH_RAM(sram_bank);
+    PLAT_SWITCH_RAM(sram_bank);
 
     return (uint8_t *)(SRAM_BASE_A000 + (DRAW_SAVE_SLOT_SIZE * sram_slot));
 }
@@ -49,7 +50,7 @@ uint8_t * undo_get_last_snapshot_addr(void) BANKED {
 
 void drawing_save_to_sram(uint8_t sram_bank, uint8_t save_slot) BANKED {
 
-    SWITCH_RAM(sram_bank);
+    PLAT_SWITCH_RAM(sram_bank);
     // VRAM/SRAM copy takes long enough with display off that it's distracting
     // (at least on emulators in DMG mode)
     //
@@ -72,7 +73,7 @@ void drawing_save_to_sram(uint8_t sram_bank, uint8_t save_slot) BANKED {
 
 void drawing_restore_from_sram(uint8_t sram_bank, uint8_t save_slot) BANKED {
 
-    SWITCH_RAM(sram_bank);
+    PLAT_SWITCH_RAM(sram_bank);
     // DISPLAY_OFF;
     uint8_t * p_sram_save_slot = (uint8_t *)(SRAM_BASE_A000 + (DRAW_SAVE_SLOT_SIZE * save_slot));
     uint8_t * p_vram_drawing   = (uint8_t *)(DRAWING_VRAM_START);

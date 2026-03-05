@@ -12,12 +12,12 @@ VERSION=0.9.2
 # Set platforms to build here, spaced separated. (These are in the separate Makefile.targets)
 # They can also be built/cleaned individually: "make gg" and "make gg-clean"
 # Possible are: gb gbc pocket megaduck sms gg
-TARGETS= gbc pocket # megaduck gb pocket megaduck sms gg nes
+TARGETS= gbc pocket megaduck # gb sms gg nes
 
 # Configure platform specific LCC flags here:
 LCCFLAGS_gb      = # -Wl-yt0x1B # Set an MBC for banking (1B-ROM+MBC5+RAM+BATT)
 LCCFLAGS_pocket  = -Wl-yt0x1B -Wm-yc -Wm-ys # -Wl-yt0x1B # Usually the same as required for .gb 
-LCCFLAGS_duck    = # -Wl-yt0x1B # Usually the same as required for .gb
+LCCFLAGS_duck    = -Wl-yt0x1B # MD2, but mainly to placate bankpack, there is no ROM header for it
 LCCFLAGS_gbc     = -Wl-yt0x1B -Wm-yc -Wm-ys # Same as .gb with: -Wm-yc (gb & gbc) or Wm-yC (gbc exclusive) -ys (SGB compat)
 LCCFLAGS_sms     =
 LCCFLAGS_gg      =
@@ -32,7 +32,25 @@ LCCFLAGS += -Wf-MMD -Wf-Wp-MP # Header file dependency output (-MMD) for Makefil
 CFLAGS += -Wf-MMD -Wf-Wp-MP # Header file dependency output (-MMD) for Makefile use + per-header Phony rules (-MP)
 
 # Bankpack randomize test to check for potential banking errors
-# LCCFLAGS += -Wb-random -Wb-max=15
+# Don't enable for megaduck, only has 8 banks total
+# LCCFLAGS += -Wb-random -Wb-max=31
+
+# Cart types can be passed in as follows
+# make CART_TYPE=<cart type>
+#
+# Set default type:
+ifndef CART_TYPE
+ifeq ($(PLAT),duck)
+	CART_TYPE=md2
+else
+	CART_TYPE=mbc5
+endif
+endif
+
+ifeq ($(PLAT),duck)
+	PLAT_SUB_EXT=.$(CART_TYPE)
+endif
+CFLAGS += -DCART_TYPE_$(CART_TYPE)=1
 
 # Higher optimization (slow builds)
 # LCCFLAGS += -Wf--max-allocs-per-node200000
@@ -63,10 +81,10 @@ PACKAGE_DIR = "../build_archive/$(VERSION)"
 
 # EXT?=gb # Only sets extension to default (game boy .gb) if not populated
 SRCDIR      = src
-OBJDIR      = obj/$(EXT)
+OBJDIR      = obj/$(EXT)$(PLAT_SUB_EXT)
 RESOBJSRC   = $(OBJDIR)/res
 RESDIR      = res
-BINDIR      = build/$(EXT)
+BINDIR      = build/$(EXT)$(PLAT_SUB_EXT)
 SAVDIR      = sav
 MKDIRS      = $(OBJDIR) $(BINDIR) $(RESOBJSRC) # See bottom of Makefile for directory auto-creation
 
@@ -77,7 +95,7 @@ IMGPNGS     = $(foreach dir,$(RESDIR),$(notdir $(wildcard $(dir)/*.png)))
 IMGSOURCES  = $(IMGPNGS:%.png=$(RESOBJSRC)/%.c)
 IMGOBJS     = $(IMGSOURCES:$(RESOBJSRC)/%.c=$(OBJDIR)/%.o)
 
-BINS	    = $(OBJDIR)/$(PROJECTNAME).$(EXT)
+BINS	    = $(OBJDIR)/$(PROJECTNAME).$(EXT)$(PLAT_SUB_EXT)
 CSOURCES    = $(foreach dir,$(SRCDIR),$(notdir $(wildcard $(dir)/*.c))) $(foreach dir,$(RESDIR),$(notdir $(wildcard $(dir)/*.c)))
 
 ASMSOURCES  = $(foreach dir,$(SRCDIR),$(notdir $(wildcard $(dir)/*.s)))
@@ -125,13 +143,24 @@ $(OBJS):	$(IMGOBJS)
 
 # Link the compiled object files into a .gb ROM file
 $(BINS):	$(OBJS)
-	$(LCC) $(LCCFLAGS) -o $(BINDIR)/$(PROJECTNAME).$(EXT) $(OBJS) $(IMGOBJS)
+	@echo EXT= $$(BINS)
+	@echo CART_TYPE= $(CART_TYPE)
+	$(LCC) $(LCCFLAGS) -o $(BINDIR)/$(PROJECTNAME).$(EXT)$(PLAT_SUB_EXT) $(OBJS) $(IMGOBJS)
+
+# Special build of for megaduck to run from an MBC5 cart
+duck-mbc5:
+	@echo Duck MBC5 not enabled until banked trampoline enabled
+#	$(MAKE) TARGETS=megaduck CART_TYPE=mbc5
+duck-mbc5-clean:
+	$(MAKE) TARGETS=megaduck-clean CART_TYPE=mbc5
 
 clean:
 	@echo Cleaning
 	@for target in $(TARGETS); do \
 		$(MAKE) $$target-clean; \
 	done
+# 	$(MAKE) TARGETS=megaduck-clean CART_TYPE=mbc5
+# 	$(MAKE) TARGETS=megaduck-clean CART_TYPE=md2
 
 romusage:
 	# Ignores failure if romusage not in path
@@ -156,9 +185,9 @@ qrcodeluts:
 
 package:
 	mkdir -p "$(PACKAGE_DIR)"
-#	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_megaduck.zip"            README.md build/duck/*.duck
+	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_megaduck.zip"            LICENSE README.md build/duck/md2/*.duck* $(SAVDIR)/$(PROJECTNAME).sav
 	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_gameboy.zip"             LICENSE README.md build/gbc/*.gbc $(SAVDIR)/$(PROJECTNAME).sav
-	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_pocket.zip"             LICENSE README.md build/pocket/*.pocket $(SAVDIR)/$(PROJECTNAME).sav
+	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_pocket.zip"              LICENSE README.md build/pocket/*.pocket $(SAVDIR)/$(PROJECTNAME).sav
 
 
 # Include available build targets

@@ -2,6 +2,7 @@
 #include <gb/sgb.h>
 #include <stdint.h>
 
+#include "platform_cart_type.h"
 #include "common.h"
 #include "input.h"
 
@@ -35,9 +36,9 @@ void sgb_check_and_init(void) {
 
         // The display must be ON before calling set_sgb_border()
         uint8_t save_bank = CURRENT_BANK;
-        SWITCH_ROM(BANK(sgb_border_img));
+        PLAT_SWITCH_ROM(BANK(sgb_border_img));
         set_sgb_border(sgb_border_img_tiles, sizeof(sgb_border_img_tiles), sgb_border_img_map, sizeof(sgb_border_img_map), sgb_border_img_palettes, sizeof(sgb_border_img_palettes));
-        SWITCH_ROM(save_bank);
+        PLAT_SWITCH_ROM(save_bank);
 
         // Set the palettes used by the game boy screen area (OBP/BGP)
         // set_bkg_data(0, (uint8_t)(sizeof(sgb_gb_screen_area_palette) >> 4), sgb_gb_screen_area_palette);

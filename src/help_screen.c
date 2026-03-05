@@ -3,6 +3,7 @@
 
 #include <gb/drawing.h>
 
+#include "platform_cart_type.h"
 #include "common.h"
 #include "input.h"
 
@@ -24,9 +25,9 @@ void help_page_show(void) NONBANKED {
     drawing_take_undo_snapshot();  // This clears out any Redo queue entries that might be present
 
     uint8_t save_bank = CURRENT_BANK;
-    SWITCH_ROM(BANK(help_page));
+    PLAT_SWITCH_ROM(BANK(help_page));
     draw_image(help_page_tiles);
-    SWITCH_ROM(save_bank);
+    PLAT_SWITCH_ROM(save_bank);
 
     // DISPLAY_ON;
 

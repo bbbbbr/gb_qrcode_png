@@ -11,29 +11,32 @@ endif
 build-target: $(BINS)
 
 clean-target:
+	@echo PLAT = $(PLAT)
+	@echo CART_TYPE = $(CART_TYPE)
+	@echo PLAT_SUB_EXT = $(PLAT_SUB_EXT)
 	rm -rf $(OBJDIR)
 	rm -rf $(BINDIR)
 
 gb-clean:
-	${MAKE} clean-target EXT=gb
+	${MAKE} clean-target PLAT=gb EXT=gb
 gb:
 	${MAKE} build-target PORT=sm83 PLAT=gb EXT=gb
 
 
 gbc-clean:
-	${MAKE} clean-target EXT=gbc
+	${MAKE} clean-target PLAT=gbc EXT=gbc
 gbc:
 	${MAKE} build-target PORT=sm83 PLAT=gb EXT=gbc
 
 
 pocket-clean:
-	${MAKE} clean-target EXT=pocket
+	${MAKE} clean-target PLAT=pocket EXT=pocket
 pocket:
 	${MAKE} build-target PORT=sm83 PLAT=ap EXT=pocket
 
 
 megaduck-clean:
-	${MAKE} clean-target EXT=duck
+	${MAKE} clean-target PLAT=duck EXT=duck
 megaduck:
 	${MAKE} build-target PORT=sm83 PLAT=duck EXT=duck
 

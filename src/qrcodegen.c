@@ -22,9 +22,9 @@
  */
 
 #include <gbdk/platform.h>
-
 #pragma bank 255  // Autobanked
 
+#include "platform_cart_type.h"
 
 BANKREF(qrcodegen)
 
@@ -253,7 +253,7 @@ static uint8_t reedSolomonMultiply(uint8_t x_) NONBANKED {
 
     #ifndef RS_LUT_NOSAVE_BANK
         rs_savebank = CURRENT_BANK;
-        SWITCH_ROM((x_ >> 6) + 1u); // Tables are located in banks 1-4
+        PLAT_SWITCH_ROM((x_ >> 6) + 1u); // Tables are located in banks 1-4
     #else
         rROMB0 = ((x_ >> 6) + 1u); // Tables are located in banks 1-4
     #endif
@@ -261,7 +261,7 @@ static uint8_t reedSolomonMultiply(uint8_t x_) NONBANKED {
     uint8_t result = *(const uint8_t *)(((uint16_t)((x_ & 0x3Fu) | 0x40u) << 8) + rs_y);
 
     #ifndef RS_LUT_NOSAVE_BANK
-        SWITCH_ROM(rs_savebank);
+        PLAT_SWITCH_ROM(rs_savebank);
     #else
         rROMB0 = CURRENT_BANK;
     #endif

@@ -1,6 +1,7 @@
 #include <gbdk/platform.h>
 #include <stdint.h>
 
+#include "platform_cart_type.h"
 #include "common.h"
 #include "input.h"
 
@@ -49,7 +50,7 @@ void main(void)
 
     HIDE_SPRITES;
     ENABLE_RAM;
-    SWITCH_RAM(SRAM_BANK_CALC_BUFFER); // RAM bank 0
+    PLAT_SWITCH_RAM(SRAM_BANK_CALC_BUFFER); // RAM bank 0
 
     if (_cpu == CGB_TYPE) {
         cpu_fast();

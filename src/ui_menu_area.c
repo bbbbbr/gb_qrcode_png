@@ -5,6 +5,7 @@
 
 #include <gbdk/emu_debug.h>  // Sensitive to duplicated line position across source files
 
+#include "platform_cart_type.h"
 #include "common.h"
 #include "input.h"
 
@@ -54,13 +55,13 @@ void ui_redraw_menus_all(void) NONBANKED {
 
     // Alternate CDE theme from holding SELECT on startup
     if (app_state.solaris_cde_ui_theme) {
-        SWITCH_ROM(BANK(ui_main_bg_cde));
+        PLAT_SWITCH_ROM(BANK(ui_main_bg_cde));
         draw_image(ui_main_bg_cde_tiles);
-        SWITCH_ROM(save_bank);
+        PLAT_SWITCH_ROM(save_bank);
     } else {
-        SWITCH_ROM(BANK(ui_main_bg));
+        PLAT_SWITCH_ROM(BANK(ui_main_bg));
         draw_image(ui_main_bg_tiles);
-        SWITCH_ROM(save_bank);
+        PLAT_SWITCH_ROM(save_bank);
     }
 
     // Redraw various menus and their state
@@ -300,7 +301,7 @@ void ui_redo_button_refresh(void) BANKED {
 void ui_cursor_speed_redraw_indicator(void) NONBANKED {
 
     uint8_t save_bank = CURRENT_BANK;
-    SWITCH_ROM(BANK(speed_button));
+    PLAT_SWITCH_ROM(BANK(speed_button));
 
     const uint8_t * p_tile_src = speed_button_tiles + (app_state.cursor_speed_mode * CURSOR_SPEED_IND_MODE_SZ_BYTES);
 
@@ -310,7 +311,7 @@ void ui_cursor_speed_redraw_indicator(void) NONBANKED {
     p_tile_src += CURSOR_SPEED_IND_ROW_SZ_BYTES;
     vmemcpy((uint8_t*)CURSOR_SPEED_IND_ROW2_VRAM_ADDR, (uint8_t *)p_tile_src, CURSOR_SPEED_IND_ROW_SZ_BYTES);
 
-    SWITCH_ROM(save_bank);
+    PLAT_SWITCH_ROM(save_bank);
 }
 
 

@@ -8,6 +8,8 @@
 
 #pragma bank 255  // Autobanked
 
+
+#include "platform_cart_type.h"
 #include "common.h"
 
 #include "png_indexed.h"
@@ -92,7 +94,7 @@ static uint16_t copy_1bpp_image_from_vram(uint8_t * p_out_buf) {
 
 void image_to_png_qrcode_url(void) BANKED {
 
-    SWITCH_RAM(SRAM_BANK_CALC_BUFFER);
+    PLAT_SWITCH_RAM(SRAM_BANK_CALC_BUFFER);
 
     // Output buffers in Cart SRAM, no need to allocate them
     uint8_t * p_img_1bpp_buf       = (uint8_t *)SRAM_UPPER_B000; // Gets overwritten by Base64 encoded image

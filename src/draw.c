@@ -3,6 +3,8 @@
 
 #include <gb/drawing.h>
 
+
+#include "platform_cart_type.h"
 #include "common.h"
 #include "input.h"
 
@@ -815,7 +817,7 @@ static void draw_tool_floodfill(uint8_t x, uint8_t y) {
         // EMU_printf("Start: %hu, %hu\n", (uint8_t)x, (uint8_t)y);
 
         // Fill queue temp buffer is in SRAM
-        SWITCH_RAM(SRAM_BANK_CALC_BUFFER);
+        PLAT_SWITCH_RAM(SRAM_BANK_CALC_BUFFER);
 
         if (flood_check_fillable(x,y) == false) return;
         flood_queue_count = 0u;

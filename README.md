@@ -79,6 +79,17 @@ https://github.com/bbbbbr/sgb-snes-mouse-gbdk/
 For emulators, it's verified as working in Mesen (SNES mouse should be second controller).
 
 
+## MegaDuck
+QR-Paint can only be used on the MegaDuck when Cart SRAM is available.
+This is possible when using:
+- A laptop with the add-on Memory Cart in the secondary cart slot (use duck.md2 build)
+- A GB->Duck cart slot adapter and an MBC5 cart (use duck.mbc5 build)
+- A cart with built-in SRAM (the ManCloud flash cart) (use duck.md2 build)
+
+To run in an emulator, use:
+`superjunior_sameduck --duck-printer-1pass --duck-sram-cart qr_paint.duck.md2`
+
+
 ## Techincal details
 The drawing is limited to 96x96 monochrome pixels due to QRCode
 size limits and the current lack of PNG DEFLATE compression.
