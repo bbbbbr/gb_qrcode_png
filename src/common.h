@@ -285,6 +285,11 @@ typedef struct app_state_t {
 // TODO: Make this part of global status struct
 extern app_state_t app_state;
 
+#if defined(MEGADUCK)
+    extern bool    megaduck_laptop_detected;
+    extern uint8_t megaduck_model;
+#endif
+
 void app_state_reset(void) BANKED;
 
 void set_pal_qrmode(void) BANKED;

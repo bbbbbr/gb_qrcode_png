@@ -6,6 +6,11 @@
 
 #pragma bank 255  // Autobanked
 
+ #if defined(MEGADUCK)
+    bool megaduck_laptop_detected;
+    uint8_t megaduck_model;
+#endif
+
 app_state_t app_state;
 
 void app_state_reset(void) BANKED {

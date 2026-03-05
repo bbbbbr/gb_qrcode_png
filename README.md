@@ -4,7 +4,7 @@ bbbbbr 2026
 
 
 ## Overview
-Draw on the Game Boy and share it direct to your phone using a QRCode!
+Draw on the Game Boy / Mega Duck and share it direct to your phone using a QRCode!
 (without the internet!)
 
 ### ROM
@@ -15,15 +15,16 @@ Downloadable ROM available on itch: https://bbbbbr.itch.io/game-boy-qr-paint
 
 
 ## Features
-- Share drawings as PNG images via QR Code
+- Share drawings as PNG images via QRCode
 - Drawing tools: Pencil, Line, Eraser, Rectangle, Circle, Flood Fill
 - Undo, Redo stack
 - 3 Drawing Save slots
 - Adjustable Draw Width
 - Adjustable Draw speed (Fast, Medium, Slow, Pixel Step)
 - 2 Draw colors (Black and White)
-- Game Boy Printer support
 - SNES Mouse support through Super Game Boy (SGB)
+- Game Boy Printer support
+- Mega Duck Printer support
 
 
 ## Usage
@@ -79,8 +80,8 @@ https://github.com/bbbbbr/sgb-snes-mouse-gbdk/
 For emulators, it's verified as working in Mesen (SNES mouse should be second controller).
 
 
-## MegaDuck
-QR-Paint can only be used on the MegaDuck when Cart SRAM is available.
+## Mega Duck
+QR-Paint can only be used on the Mega Duck when Cart SRAM is available.
 This is possible when using:
 - A laptop with the add-on Memory Cart in the secondary cart slot (use duck.md2 build)
 - A GB->Duck cart slot adapter and an MBC5 cart (use duck.mbc5 build)

@@ -7,8 +7,13 @@
 
 #include "ui_main.h"
 #include "save_and_undo.h"
+
 #if defined(GAMEBOY) || defined(ANALOGUEPOCKET)
     #include "gb/gbprinter.h"
+#endif
+
+#if defined(MEGADUCK)
+    #include "duck/megaduck_printscreen.h"
 #endif
 
 
@@ -39,10 +44,11 @@ void print_drawing(void) BANKED {
     gotogxy(5u,4u);
     gprintf("Printing..");
 
-    // Printing may be more reliable at DMG link speed
-    if (_cpu == CGB_TYPE) cpu_slow();
 
     #if defined(GAMEBOY) || defined(ANALOGUEPOCKET)
+        // Printing may be more reliable at DMG link speed
+        if (_cpu == CGB_TYPE) cpu_slow();
+
         bool printer_found = gbprinter_detect(PRINTER_DETECT_TIMEOUT) == PRN_STATUS_OK;
         if (printer_found) {
             // gbprinter_print_screen_apa(IMG_TILE_X_START, IMG_TILE_Y_START, IMG_TILE_X_END, IMG_TILE_Y_END);
@@ -56,9 +62,17 @@ void print_drawing(void) BANKED {
         } else {
             display_result("Not Found");
         }
+        if (_cpu == CGB_TYPE) cpu_fast();
+
     #endif
 
-    if (_cpu == CGB_TYPE) cpu_fast();
+    #if defined(MEGADUCK)
+        if (megaduck_laptop_detected) {
+            if (duck_print_rect_from_undo()) display_result("Done");
+            else display_result("Not Found");
+        }
+        else display_result("Not Found");
+    #endif
 
     waitpadup_lowcpu(J_ALL);
     waitpadticked_lowcpu(J_ANY);

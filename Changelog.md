@@ -3,6 +3,8 @@
 ## Version 0.92
 - Added SGB Mouse support
 - Added SGB border
+- Added MegaDuck support
+- Added MegaDuck (Laptop) Printer support
 - Fixed crash with circle diameter 1 pixel and thickest draw width
 
 ## Version 0.91

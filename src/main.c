@@ -15,6 +15,11 @@
     #include "gb/sgb_features.h"
 #endif
 
+#if (defined(MEGADUCK))
+    #include <duck/model.h>
+    #include <duck/laptop_io.h>
+#endif
+
 void make_and_show_qrcode(void);
 void sgb_check_and_init(void);
 
@@ -50,6 +55,11 @@ void main(void)
     #if defined(GAMEBOY) || defined(ANALOGUEPOCKET)
         // Call SGB init before everything else
         sgb_check_and_init();
+    #endif
+
+    #if defined(MEGADUCK)
+        megaduck_model = duck_check_model();  // This must be called before any vram tiles are loaded
+        megaduck_laptop_detected = duck_io_laptop_init();
     #endif
 
     HIDE_SPRITES;
