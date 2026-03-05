@@ -65,6 +65,20 @@ Known **not working** Browsers:
 - Chromium/Chrome (Android)
 
 
+## SGB Mouse
+SNES Mouse support through the SGB is based on an improved version of leinacc's
+demo:
+https://github.com/leinacc/sgb-testbed
+
+There is a repo for the improved version with a GBDK example:
+https://github.com/bbbbbr/sgb-snes-mouse-gbdk/
+
+- The OEM SNES mouse works well at the qr-paint "medium" speed.
+- The Hyperkin SNES mouse works better at qr-paint "slow" setting.
+
+For emulators, it's verified as working in Mesen (SNES mouse should be second controller).
+
+
 ## Techincal details
 The drawing is limited to 96x96 monochrome pixels due to QRCode
 size limits and the current lack of PNG DEFLATE compression.
