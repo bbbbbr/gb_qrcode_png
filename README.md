@@ -88,7 +88,8 @@ This is possible when using:
 - A cart with built-in SRAM (the ManCloud flash cart) (use duck.md2 build)
 
 To run in an emulator, use:
-`superjunior_sameduck --duck-printer-1pass --duck-sram-cart qr_paint.duck.md2`
+- `superjunior_sameduck --duck-printer-1pass --duck-sram-cart qr_paint.duck.md2`
+- This requires `SuperJuniorSameDuck v1.0.1`: https://github.com/bbbbbr/SuperJuniorSameDuck/releases/tag/Duck_v1.0.1
 
 
 ## Techincal details
