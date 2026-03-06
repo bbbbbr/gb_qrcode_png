@@ -20,6 +20,14 @@ uint8_t mouse_buttons = 0u;
 uint8_t mouse_buttons_last = 0u;
 
 // MouseHook:
+//                                   RTS
+//                                   ||
+// Power-up: 60 A8 74 5A 2D FA BC FC 60 5A AF 08 E7 C3 F7 1B
+//
+// Modified: 60 A8 74 5A 2D FA BC FC 4C 02 09 08 E7 C3 F7 1B
+//                                   |------|
+//                                    JMP ....
+//
 // https://github.com/bbbbbr/sgb-testbed/blob/a10011c71f6ed66e3f16a7c097611a9e899b3eb5/snes_src/hacks/mouseHook.s#L3
 //
 // .org $808
@@ -27,8 +35,9 @@ uint8_t mouse_buttons_last = 0u;
 // PreGBMainLoopHook:
 //     jmp $902
 // 
-//                                  DATA_SND,Addr-Low/Hi, Bank, Len,  Payload Data.....................................................
-const uint8_t sgb_mouse_hook[]      = { 0x79, 0x08, 0x08, 0x00, 0x03, 0x4c, 0x02, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, };
+//                                   DATA_SND,Addr-Low/Hi, Bank, Len,  Payload Data.....................................................
+const uint8_t sgb_mouse_hook[]       = { 0x79, 0x08, 0x08, 0x00, 0x03, 0x4c, 0x02, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, };
+const uint8_t sgb_mouse_hook_reset[] = { 0x79, 0x08, 0x08, 0x00, 0x03, 0x60, 0x5A, 0xAF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, };
 
 
 // SGB Command $0F — DATA_SND
@@ -78,7 +87,11 @@ const uint8_t sgb_mouse_hook[]      = { 0x79, 0x08, 0x08, 0x00, 0x03, 0x4c, 0x02
 // into P2-4 (X -> 2, Y -> 3, Buttons -> 4)
 void sgb_mouse_install(void) BANKED {
 
-    // Install the mouse handler first
+    // First uninstall the hook in case it was previously running and this is
+    // a soft-reset, such as pushing menu button on an EverDrive to load a new ROM
+    sgb_transfer(sgb_mouse_hook_reset);
+
+    // Then install the mouse handler before enabling the hook
     sgb_transfer(sgb_mouse_handler_0);
     sgb_transfer(sgb_mouse_handler_1);
     sgb_transfer(sgb_mouse_handler_2);
