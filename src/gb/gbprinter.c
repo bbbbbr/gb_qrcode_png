@@ -180,7 +180,7 @@ uint8_t gbprinter_print_screen_rect_from_undo(void) BANKED {
                 RET_ERR_IF_FAIL(PRINTER_SEND_COMMAND(PRN_PKT_EOF));
                 // Some emulators don't set PRN_STATUS_FULL bit until PRN_PKT_START, so this may fail on them.
                 // It also seems optional since some OEM games skip this check and call print immediately.
-                RET_ERR_IF_FAIL(printer_wait(PRN_FULL_TIMEOUT, PRN_STATUS_FULL, PRN_STATUS_FULL));
+                // RET_ERR_IF_FAIL(printer_wait(PRN_FULL_TIMEOUT, PRN_STATUS_FULL, PRN_STATUS_FULL));
 
                 gbprinter_set_print_params((y == (rows - 1)) ? PRN_FINAL_MARGIN : PRN_NO_MARGINS, PRN_PALETTE_NORMAL, PRN_EXPOSURE_DARK);
                 RET_ERR_IF_FAIL(PRINTER_SEND_COMMAND(PRN_PKT_START));
@@ -207,7 +207,7 @@ uint8_t gbprinter_print_screen_rect_from_undo(void) BANKED {
     if (pkt_count) {
         RET_ERR_IF_FAIL(PRINTER_SEND_COMMAND(PRN_PKT_EOF));
         // See earlier comment about PRN_STATUS_FULL
-        RET_ERR_IF_FAIL(printer_wait(PRN_FULL_TIMEOUT, PRN_STATUS_FULL, PRN_STATUS_FULL));
+        // RET_ERR_IF_FAIL(printer_wait(PRN_FULL_TIMEOUT, PRN_STATUS_FULL, PRN_STATUS_FULL));
 
         // setup printing if required
         gbprinter_set_print_params(PRN_FINAL_MARGIN, PRN_PALETTE_NORMAL, PRN_EXPOSURE_DARK);
