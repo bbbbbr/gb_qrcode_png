@@ -82,6 +82,7 @@ PACKAGE_DIR = "../build_archive/$(VERSION)"
 # EXT?=gb # Only sets extension to default (game boy .gb) if not populated
 SRCDIR      = src
 PLAT_SRCDIR = $(SRCDIR)/$(PLAT_SRC_NAME)
+PLAT_MBC_SRCDIR = $(SRCDIR)/$(PLAT_SRC_NAME)_$(CART_TYPE)
 OBJDIR      = obj/$(EXT)$(PLAT_SUB_EXT)
 RESOBJSRC   = $(OBJDIR)/res
 RESDIR      = res
@@ -97,10 +98,15 @@ IMGSOURCES  = $(IMGPNGS:%.png=$(RESOBJSRC)/%.c)
 IMGOBJS     = $(IMGSOURCES:$(RESOBJSRC)/%.c=$(OBJDIR)/%.o)
 
 BINS	    = $(OBJDIR)/$(PROJECTNAME).$(EXT)$(PLAT_SUB_EXT)
+
 CSOURCES    = $(foreach dir,$(SRCDIR),$(notdir $(wildcard $(dir)/*.c))) $(foreach dir,$(RESDIR),$(notdir $(wildcard $(dir)/*.c)))
 CSOURCES    += $(foreach dir,$(PLAT_SRCDIR),$(notdir $(wildcard $(dir)/*.c)))
+CSOURCES    += $(foreach dir,$(PLAT_MBC_SRCDIR),$(notdir $(wildcard $(dir)/*.c)))
 
 ASMSOURCES  = $(foreach dir,$(SRCDIR),$(notdir $(wildcard $(dir)/*.s)))
+ASMSOURCES  += $(foreach dir,$(PLAT_SRCDIR),$(notdir $(wildcard $(dir)/*.s)))
+ASMSOURCES  += $(foreach dir,$(PLAT_MBC_SRCDIR),$(notdir $(wildcard $(dir)/*.s)))
+
 OBJS        = $(CSOURCES:%.c=$(OBJDIR)/%.o) $(ASMSOURCES:%.s=$(OBJDIR)/%.o)
 
 # Dependencies (using output from -Wf-MMD -Wf-Wp-MP)
@@ -127,22 +133,40 @@ $(OBJDIR)/%.o:	$(RESOBJSRC)/%.c
 $(OBJDIR)/%.o:	$(SRCDIR)/%.c
 	$(LCC) $(CFLAGS) -c -o $@ $<
 
-# Compile .c files in "src/" to .o object files
+# Compile .c files in "src/$(plat)" to .o object files
 $(OBJDIR)/%.o:	$(PLAT_SRCDIR)/%.c
+	$(LCC) $(CFLAGS) -c -o $@ $<
+
+# Compile .c files in "src/$(plat)_$(carttype)" to .o object files
+$(OBJDIR)/%.o:	$(PLAT_MBC_SRCDIR)/%.c
 	$(LCC) $(CFLAGS) -c -o $@ $<
 
 # Compile .c files in "res/" to .o object files
 $(OBJDIR)/%.o:	$(RESDIR)/%.c
 	$(LCC) $(CFLAGS) -c -o $@ $<
 
-# Compile .s assembly files in "src/" to .o object files
+# Assemble .s assembly files in "src/" to .o object files
 $(OBJDIR)/%.o:	$(SRCDIR)/%.s
+	$(LCC) $(CFLAGS) -c -o $@ $<
+
+# Assemble .s files in "src/$(plat)" to .o object files
+$(OBJDIR)/%.o:	$(PLAT_SRCDIR)/%.s
+	$(LCC) $(CFLAGS) -c -o $@ $<
+
+# Assemble .s files in "src/$(plat)_$(carttype)" to .o object files
+$(OBJDIR)/%.o:	$(PLAT_MBC_SRCDIR)/%.s
 	$(LCC) $(CFLAGS) -c -o $@ $<
 
 # If needed, compile .c files in "src/" to .s assembly files
 # (not required if .c is compiled directly to .o)
 $(OBJDIR)/%.s:	$(SRCDIR)/%.c
 	$(LCC) $(CFLAGS) -S -o $@ $<
+
+# If needed, compile .c files in "src/" to .s assembly files
+# (not required if .c is compiled directly to .o)
+$(OBJDIR)/%.s:	$(SRCDIR)/%.c
+	$(LCC) $(CFLAGS) -S -o $@ $<
+
 
 # Convert images first so they're available when compiling the main sources
 $(OBJS):	$(IMGOBJS)
@@ -153,8 +177,7 @@ $(BINS):	$(OBJS)
 
 # Special build of for megaduck to run from an MBC5 cart
 duck-mbc5:
-	@echo Duck MBC5 not enabled until banked trampoline enabled
-#	$(MAKE) TARGETS=megaduck CART_TYPE=mbc5
+	$(MAKE) TARGETS=megaduck CART_TYPE=mbc5
 duck-mbc5-clean:
 	$(MAKE) TARGETS=megaduck-clean CART_TYPE=mbc5
 

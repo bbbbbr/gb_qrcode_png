@@ -13,15 +13,17 @@
 
     // Default GBDK ROM bank switch for MD2 is ok
     // #define PLAT_SWITCH_ROM(b) (_current_bank = (b), (*(volatile uint8_t *)0x0001 = b))
+    #define PLAT_ENABLE_SRAM    // No need to, SRAM enabled by default
     #define PLAT_SWITCH_ROM(b) SWITCH_ROM(b)
-    #define PLAT_SWITCH_RAM(b) ((*(volatile uint8_t *)0x1000 = (b) << 4))
+    #define PLAT_SWITCH_RAM(b) (*(volatile uint8_t *)0x1000 = (b) << 4)
 #elif defined(CART_TYPE_mbc5)
-    // Forcing explicit MBC5
-    #error  Error: Needs complementary forcing of mbc5 bank switch trampoline
-    #define PLAT_SWITCH_ROM(b) SWITCH_ROM_MBC5(b)
-    #define PLAT_SWITCH_RAM(b) SWITCH_RAM_MBC5(b)
+    // Forcing explicit MBC5 on Megaduck, also requires modified asn banked call trampolines (see src/duck_mbc5)
+    #define PLAT_ENABLE_SRAM    (*(volatile uint8_t *)0x0000 = 0x0A)
+    #define PLAT_SWITCH_ROM(b) (_current_bank = (b), (*(volatile uint8_t *)0x2000 = (b)))
+    #define PLAT_SWITCH_RAM(b) (*(volatile uint8_t *)0x4000 = (b))
 #else
     // MBC5
+    #define PLAT_ENABLE_SRAM    ENABLE_RAM
     #define PLAT_SWITCH_ROM(b) SWITCH_ROM(b)
     #define PLAT_SWITCH_RAM(b) SWITCH_RAM(b)
 #endif

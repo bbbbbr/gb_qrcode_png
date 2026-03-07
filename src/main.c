@@ -63,7 +63,7 @@ void main(void)
     #endif
 
     HIDE_SPRITES;
-    ENABLE_RAM;
+    PLAT_ENABLE_SRAM;
     PLAT_SWITCH_RAM(SRAM_BANK_CALC_BUFFER); // RAM bank 0
 
     if (_cpu == CGB_TYPE) {
