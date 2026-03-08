@@ -282,12 +282,10 @@ static void adler_crc_update(uint8_t * buffer, uint16_t buffer_sz) {
 
 
 
-// Source - https://stackoverflow.com/a
+// crc 32 (ported from javascript) Source - https://stackoverflow.com/questions/18638900/javascript-crc32
 // Posted by Denys Séguret, modified by community. See post 'Timeline' for change history
 // Retrieved 2026-01-01, License - CC BY-SA 3.0
-
-
-// TODO: OPTIMIZE?
+//
 uint32_t crc32(const uint8_t * p_buffer, uint16_t buffer_sz) {
 
     uint32_t crc =  0xFFFFFFFF;
@@ -324,6 +322,7 @@ static uint8_t * png_write_chunk(uint8_t * p_out_buf, const char * type, const u
 
 
 
+/*
 
 // TODO: make a generalized version which accepts 1/2/4 bpp source as well (it'll be messier and slower...)
 static uint16_t prepare_pixel_data_8bpp_src(void) {
@@ -453,6 +452,8 @@ static uint16_t prepare_pixel_data_8bpp_src(void) {
     return (p_zlib_out_buf - p_zlib_out_buf_start);
 }
 
+*/
+
 
 // TODO: FEATURE: Accept data in gb tile format? (1 or 2bpp, repack the bytes into the output buffer)
 //
@@ -557,8 +558,8 @@ uint16_t png_indexed_encode(void) BANKED {
             if (png.out_bpp == PNG_BPP_1) zlib_packed_size = prepare_pixel_data_1bpp_src_and_1bpp_out();
             else return 0;
             break;
-        case SRC_BPP_8: zlib_packed_size = prepare_pixel_data_8bpp_src();
-            break;
+        // case SRC_BPP_8: zlib_packed_size = prepare_pixel_data_8bpp_src();
+        //     break;
         default: return 0;
     }
 

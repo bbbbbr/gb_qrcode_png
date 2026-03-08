@@ -96,3 +96,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
+# crc 32 
+Ported from javascript, 2026-01-01, source: https://stackoverflow.com/questions/18638900/javascript-crc32
+Posted by Denys Séguret, modified by community.
+License - CC BY-SA 3.0
