@@ -179,7 +179,7 @@ clean:
 	@echo Cleaning
 	@for target in $(TARGETS); do \
 		$(MAKE) $$target-clean; \
-	done	
+	done
 
 
 romusage:
