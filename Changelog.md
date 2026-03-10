@@ -5,6 +5,8 @@
 - Added SGB border
 - Added MegaDuck support
 - Added MegaDuck (Laptop) Printer support
+- Improved controls when line/rect/circle started with speed (B) button pressed
+- Fixed Game Boy Printer not working in some cases (thank to GrandpasGameBox)
 - Fixed crash with circle diameter 1 pixel and thickest draw width
 
 ## Version 0.91
