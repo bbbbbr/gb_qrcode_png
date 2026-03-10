@@ -12,7 +12,7 @@ VERSION=0.9.2
 # Set platforms to build here, spaced separated. (These are in the separate Makefile.targets)
 # They can also be built/cleaned individually: "make gg" and "make gg-clean"
 # Possible are: gb gbc pocket megaduck sms gg
-TARGETS= gbc pocket megaduck # gb sms gg nes
+TARGETS= gbc pocket megaduck duck-mbc5 # gb sms gg nes
 
 # Configure platform specific LCC flags here:
 LCCFLAGS_gb      = # -Wl-yt0x1B # Set an MBC for banking (1B-ROM+MBC5+RAM+BATT)
@@ -175,19 +175,12 @@ $(OBJS):	$(IMGOBJS)
 $(BINS):	$(OBJS)
 	$(LCC) $(LCCFLAGS) -o $(BINDIR)/$(PROJECTNAME).$(EXT)$(PLAT_SUB_EXT) $(OBJS) $(IMGOBJS)
 
-# Special build of for megaduck to run from an MBC5 cart
-duck-mbc5:
-	$(MAKE) TARGETS=megaduck CART_TYPE=mbc5
-duck-mbc5-clean:
-	$(MAKE) TARGETS=megaduck-clean CART_TYPE=mbc5
-
 clean:
 	@echo Cleaning
 	@for target in $(TARGETS); do \
 		$(MAKE) $$target-clean; \
-	done
-# 	$(MAKE) TARGETS=megaduck-clean CART_TYPE=mbc5
-# 	$(MAKE) TARGETS=megaduck-clean CART_TYPE=md2
+	done	
+
 
 romusage:
 	# Ignores failure if romusage not in path
@@ -212,7 +205,7 @@ qrcodeluts:
 
 package:
 	mkdir -p "$(PACKAGE_DIR)"
-	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_megaduck.zip"            LICENSE README.md build/duck/md2/*.duck* $(SAVDIR)/$(PROJECTNAME).sav
+	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_megaduck.zip"            LICENSE README.md build/duck.md2/*.duck.md2 build/duck.mbc5/*.duck.mbc5 $(SAVDIR)/$(PROJECTNAME).sav
 	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_gameboy.zip"             LICENSE README.md build/gbc/*.gbc $(SAVDIR)/$(PROJECTNAME).sav
 	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_pocket.zip"              LICENSE README.md build/pocket/*.pocket $(SAVDIR)/$(PROJECTNAME).sav
 

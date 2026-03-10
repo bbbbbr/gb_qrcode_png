@@ -37,6 +37,12 @@ megaduck-clean:
 megaduck:
 	${MAKE} build-target PORT=sm83 PLAT=duck EXT=duck PLAT_SRC_NAME=duck
 
+# Special build of for megaduck to run from an MBC5 cart
+duck-mbc5-clean:
+	${MAKE} clean-target PLAT=duck EXT=duck CART_TYPE=mbc5
+duck-mbc5:
+	${MAKE} build-target PORT=sm83 PLAT=duck EXT=duck PLAT_SRC_NAME=duck CART_TYPE=mbc5
+
 
 sms-clean:
 	${MAKE} clean-target EXT=sms
