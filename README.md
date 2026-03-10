@@ -109,6 +109,7 @@ drawing image that was exported as a QRCode.
 - GBDK-2020 (4.5.0+)
 - Emulicious
 - ImHex
+- pngcheck
 
 The QRCode generator is an optimized fork of https://github.com/bbbbbr/gameboy_qrcode which is a fork of msx_qrcode https://github.com/MartinezTorres/msx_qrcode/tree/master
 
