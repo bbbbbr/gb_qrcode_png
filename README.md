@@ -66,18 +66,15 @@ Known **not working** Browsers:
 - Chromium/Chrome (Android)
 
 
-## SGB Mouse
-SNES Mouse support through the SGB is based on an improved version of leinacc's
-demo:
-https://github.com/leinacc/sgb-testbed
-
-There is a repo for the improved version with a GBDK example:
-https://github.com/bbbbbr/sgb-snes-mouse-gbdk/
+## SGB + SNES Mouse
+Super Nintendo Mouse support through the SGB is based on a modified version of
+vinheim3's demo. Thanks for sharing your cool idea and how do it!
 
 - The OEM SNES mouse works well at the qr-paint "medium" speed.
 - The Hyperkin SNES mouse works better at qr-paint "slow" setting.
 
-For emulators, it's verified as working in Mesen (SNES mouse should be second controller).
+For emulators, it's verified as working in Mesen. 
+The SNES mouse should be second controller, it may be a little fast.
 
 
 ## Mega Duck
@@ -89,10 +86,11 @@ This is possible when using:
 
 To run in an emulator, use:
 - `superjunior_sameduck --duck-printer-1pass --duck-sram-cart qr_paint.duck.md2`
-- This requires `SuperJuniorSameDuck v1.0.1`: https://github.com/bbbbbr/SuperJuniorSameDuck/releases/tag/Duck_v1.0.1
+This requires `SuperJuniorSameDuck v1.0.1`:
+- https://github.com/bbbbbr/SuperJuniorSameDuck/releases/tag/Duck_v1.0.1
 
 
-## Techincal details
+## Technical details
 The drawing is limited to 96x96 monochrome pixels due to QRCode
 size limits and the current lack of PNG DEFLATE compression.
 
@@ -111,6 +109,7 @@ drawing image that was exported as a QRCode.
 - GBDK-2020 (4.5.0+)
 - Emulicious
 - ImHex
+- pngcheck
 
 The QRCode generator is an optimized fork of https://github.com/bbbbbr/gameboy_qrcode which is a fork of msx_qrcode https://github.com/MartinezTorres/msx_qrcode/tree/master
 

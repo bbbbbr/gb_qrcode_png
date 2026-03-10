@@ -207,7 +207,7 @@ package:
 	mkdir -p "$(PACKAGE_DIR)"
 	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_megaduck.zip"            LICENSE README.md build/duck.md2/*.duck.md2 build/duck.mbc5/*.duck.mbc5 $(SAVDIR)/$(PROJECTNAME).sav
 	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_gameboy.zip"             LICENSE README.md build/gbc/*.gbc $(SAVDIR)/$(PROJECTNAME).sav
-	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_pocket.zip"              LICENSE README.md build/pocket/*.pocket $(SAVDIR)/$(PROJECTNAME).sav
+	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_analogue_pocket.zip"     LICENSE README.md build/pocket/*.pocket $(SAVDIR)/$(PROJECTNAME).sav
 
 
 # Include available build targets
