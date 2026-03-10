@@ -53,6 +53,7 @@ static bool flood_check_fillable(uint8_t x, uint8_t y);
 static uint8_t  tool_start_x, tool_start_y;
 static bool     tool_fillstyle = M_NOFILL;
 static bool     tool_undo_snapshot_taken = false;
+static bool     tool_started_with_speed_button = false;
 
 // For Flood-fill
 static int8_t * p_flood_queue = (int8_t *)SRAM_UPPER_B000; // Flood-fill Queue temp buffer is in SRAM shared with other uses
@@ -341,6 +342,7 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
         // Start drawing a line
         if (KEY_TICKED(DRAW_MAIN_BUTTON)) {
+            tool_started_with_speed_button = KEY_PRESSED(UI_CURSOR_SPEED_BUTTON);
             tool_undo_snapshot_taken = false;
             tool_start_x = cursor_8u_x;
             tool_start_y = cursor_8u_y;
@@ -360,7 +362,13 @@ static void draw_tool_line(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
         uint8_t current_action = DRAW_ACTION_IDLE;
         if      (KEY_TICKED(DRAW_MAIN_BUTTON))   current_action = DRAW_ACTION_FINALIZE;
-        else if (KEY_RELEASED(DRAW_CANCEL_BUTTON)) current_action = DRAW_ACTION_CANCEL;
+        else if (KEY_RELEASED(DRAW_CANCEL_BUTTON)) {
+            // If the user started the tool with the SPEED button pressed (which is also CANCEL)
+            // then the first release of that button should be to cancel speed mode
+            // instead of canceling the draw.
+            if (tool_started_with_speed_button) tool_started_with_speed_button = false;
+            else current_action = DRAW_ACTION_CANCEL;
+        }
         else if (new_cursor_pos)                 current_action = DRAW_ACTION_NEW_DRAW_POSITION;
 
         // Un-draw from the last frame (XOR)
@@ -516,6 +524,7 @@ static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
         // Start drawing a rect
         if (KEY_TICKED(DRAW_MAIN_BUTTON)) {
+            tool_started_with_speed_button = KEY_PRESSED(UI_CURSOR_SPEED_BUTTON);
             tool_start_x = cursor_8u_x;
             tool_start_y = cursor_8u_y;
             // Draw the first rect(1 pixel) XOR style so it can be undrawn
@@ -532,7 +541,13 @@ static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
         uint8_t current_action = DRAW_ACTION_IDLE;
         if      (KEY_TICKED(DRAW_MAIN_BUTTON))   current_action = DRAW_ACTION_FINALIZE;
-        else if (KEY_RELEASED(DRAW_CANCEL_BUTTON)) current_action = DRAW_ACTION_CANCEL;
+        else if (KEY_RELEASED(DRAW_CANCEL_BUTTON)) {
+            // If the user started the tool with the SPEED button pressed (which is also CANCEL)
+            // then the first release of that button should be to cancel speed mode
+            // instead of canceling the draw.
+            if (tool_started_with_speed_button) tool_started_with_speed_button = false;
+            else current_action = DRAW_ACTION_CANCEL;
+        }
         else if ((cursor_8u_x != app_state.draw_cursor_8u_last_x) ||
                  (cursor_8u_y !=app_state.draw_cursor_8u_last_y)) current_action = DRAW_ACTION_NEW_DRAW_POSITION;
 
@@ -671,6 +686,7 @@ static void draw_tool_circle(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
         // Start drawing
         if (KEY_TICKED(DRAW_MAIN_BUTTON)) {
+            tool_started_with_speed_button = KEY_PRESSED(UI_CURSOR_SPEED_BUTTON);
             // Block starting a circle on any edge of the drawing area
             // since radius of 1+ would spill into the UI area
             if ((cursor_8u_x != IMG_X_START) && (cursor_8u_x != IMG_X_END) &&
@@ -691,10 +707,15 @@ static void draw_tool_circle(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
     } else {
         // Drawing is active, currently previewing position
 
-
         uint8_t current_action = DRAW_ACTION_IDLE;
         if      (KEY_TICKED(DRAW_MAIN_BUTTON))   current_action = DRAW_ACTION_FINALIZE;
-        else if (KEY_RELEASED(DRAW_CANCEL_BUTTON)) current_action = DRAW_ACTION_CANCEL;
+        else if (KEY_RELEASED(DRAW_CANCEL_BUTTON)) {
+            // If the user started the tool with the SPEED button pressed (which is also CANCEL)
+            // then the first release of that button should be to cancel speed mode
+            // instead of canceling the draw.
+            if (tool_started_with_speed_button) tool_started_with_speed_button = false;
+            else current_action = DRAW_ACTION_CANCEL;
+        }
         else if ((cursor_8u_x != app_state.draw_cursor_8u_last_x) ||
                  (cursor_8u_y !=app_state.draw_cursor_8u_last_y)) current_action = DRAW_ACTION_NEW_DRAW_POSITION;
 
