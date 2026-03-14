@@ -32,6 +32,7 @@ static void draw_tool_pencil_width_2(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static void draw_tool_pencil_width_3(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static void draw_tool_line_width_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static void draw_tool_rect_width_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
+static void draw_tool_rect_circle_1(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static void draw_tool_rect_circle_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 
 static void draw_tool_pencil(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
@@ -590,6 +591,7 @@ static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
 // TODO: could do a 96x96 LUT to get actual line distance
 // Quick but inaccurate line length
+// Return result of zero is allowed with GBDK lib fix blocking circle of radius 0 and 255
 static uint8_t get_radius(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
     uint8_t x_dist, y_dist;
     if (tool_start_x > cursor_8u_x) x_dist = (tool_start_x - cursor_8u_x);
@@ -600,12 +602,8 @@ static uint8_t get_radius(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
     // Return whichever is longer
     uint8_t result = (x_dist > y_dist) ? x_dist : y_dist;
-    // Circle drawing doesn't handle radius of zero well
-    if (result == 0) result++;
 
     // Clamp distance to not exceed drawing area
-    // There is gating at the start of line drawing to make sure that this shouldn't
-    // result in a radius 0, which would crash the circle drawing
     if (result > (tool_start_x - IMG_X_START)) result = (tool_start_x - IMG_X_START);
     if (result > (IMG_X_END - tool_start_x))   result = (IMG_X_END - tool_start_x);
     if (result > (tool_start_y - IMG_Y_START)) result = (tool_start_y - IMG_Y_START);
@@ -613,6 +611,15 @@ static uint8_t get_radius(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
     // EMU_printf("xd=%hu, yd=%hu, len=%hu\n", (uint8_t)x_dist, (uint8_t)y_dist, (uint8_t)result);
     return result;
+}
+
+
+static void draw_tool_rect_circle_1(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
+
+    uint8_t radius = get_radius(cursor_8u_x, cursor_8u_y);
+
+    if (radius == 0) plot_point(tool_start_x, tool_start_y);
+    else circle(tool_start_x, tool_start_y, radius, tool_fillstyle);
 }
 
 
@@ -624,6 +631,13 @@ static void draw_tool_rect_circle_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u
     uint8_t end_y   = cursor_8u_y;
 
     uint8_t radius = get_radius(end_x, end_y);
+
+    // APA circle doesn't draw for size of zero, manually draw some pixels instead using pencil tool
+    if (radius == 0) {
+        if (app_state.draw_width == DRAW_WIDTH_MODE_2) draw_tool_pencil_width_2(tool_start_x, tool_start_y);
+        else                                           draw_tool_pencil_width_3(tool_start_x, tool_start_y);
+        return;
+    }
 
     if ((start_x - radius) < (IMG_X_START + 1u)) radius--;
     if ((start_y - radius) < (IMG_Y_START + 1u)) radius--;
@@ -650,11 +664,9 @@ static void draw_tool_rect_circle_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u
     } else { // if (app_state.draw_width == DRAW_WIDTH_MODE_3) {
 
         //
-        circle(tool_start_x, tool_start_y, radius + 1u, tool_fillstyle);
-        // Radius 0 crashes gbdk circle draw, so only draw inner if radius wouldn't become 0
-        if (radius >= 2) {
-            circle(tool_start_x, tool_start_y, radius - 1u, tool_fillstyle);
-        }
+        circle(tool_start_x,      tool_start_y, radius + 1u, tool_fillstyle);
+        circle(tool_start_x,      tool_start_y, radius - 1u, tool_fillstyle);
+
         circle(tool_start_x - 1u, tool_start_y,      radius, tool_fillstyle);
         circle(tool_start_x     , tool_start_y - 1u, radius, tool_fillstyle);
         circle(tool_start_x + 1u, tool_start_y,      radius, tool_fillstyle);
@@ -673,9 +685,9 @@ static void draw_tool_circle_finalize_last_preview(void) {
 
     // Draw finalized version
     drawing_set_to_main_colors();
-    if (app_state.draw_width == DRAW_WIDTH_MODE_1)
-        circle(tool_start_x, tool_start_y, get_radius(app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y), tool_fillstyle);
-    else
+    if (app_state.draw_width == DRAW_WIDTH_MODE_1) {
+        draw_tool_rect_circle_1(app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
+    } else
         draw_tool_rect_circle_2_and_3(app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
 }
 
@@ -734,7 +746,7 @@ static void draw_tool_circle(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
             drawing_set_to_main_colors();
             if (app_state.draw_width == DRAW_WIDTH_MODE_1)
-                circle(tool_start_x, tool_start_y, get_radius(cursor_8u_x, cursor_8u_y), tool_fillstyle);
+                draw_tool_rect_circle_1(cursor_8u_x, cursor_8u_y);
             else
                 draw_tool_rect_circle_2_and_3(cursor_8u_x, cursor_8u_y);
 
