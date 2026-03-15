@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 0.92
+## Version 0.93
 - Selectable fill style for rect and circle
 
 ## Version 0.92
