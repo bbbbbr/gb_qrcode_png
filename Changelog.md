@@ -1,6 +1,9 @@
 # Changelog
 
 ## Version 0.92
+- Selectable fill style for rect and circle
+
+## Version 0.92
 - Added SGB Mouse support
 - Added SGB border
 - Added MegaDuck support
