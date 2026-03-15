@@ -54,7 +54,6 @@ static bool flood_queue_push(int8_t x1, int8_t x2, int8_t y1, int8_t y2);
 static bool flood_check_fillable(uint8_t x, uint8_t y);
 
 static uint8_t  tool_start_x, tool_start_y;
-static bool     tool_fillstyle = M_NOFILL;
 static bool     tool_undo_snapshot_taken = false;
 static bool     tool_started_with_speed_button = false;
 
@@ -471,7 +470,7 @@ static void draw_tool_rect_width_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u_
     }
 
     // First rect
-    box(start_x, start_y, end_x, end_y, tool_fillstyle);
+    box(start_x, start_y, end_x, end_y, M_NOFILL);
 
     // Second one is shifted by 1 pixel all the way around to be inside the primary one
     if (start_x == end_x) {
@@ -488,7 +487,7 @@ static void draw_tool_rect_width_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u_
         else                 { start_y--; end_y++; }
     }
 
-    box(start_x, start_y, end_x, end_y, tool_fillstyle);
+    box(start_x, start_y, end_x, end_y, M_NOFILL);
 
     // Third rect if applicable
     if (app_state.draw_width == DRAW_WIDTH_MODE_3) {
@@ -510,7 +509,7 @@ static void draw_tool_rect_width_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u_
             else                 { start_y += 2u; end_y -= 2u; }
         }
 
-        box(start_x, start_y, end_x, end_y, tool_fillstyle);
+        box(start_x, start_y, end_x, end_y, M_NOFILL);
     }
 }
 
@@ -519,7 +518,7 @@ static void draw_tool_rect_width_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u_
 static void draw_tool_rect_finalize_last_preview(void) {
     // Undraw last preview
     color(BLACK,WHITE,XOR);
-    box(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y, tool_fillstyle);
+    box(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y, M_NOFILL);
 
     // Take undo snapshot
     drawing_take_undo_snapshot();
@@ -532,7 +531,7 @@ static void draw_tool_rect_finalize_last_preview(void) {
 
     drawing_set_to_main_colors();
     if (app_state.draw_width == DRAW_WIDTH_MODE_1)
-        box(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y, tool_fillstyle);
+        box(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y, M_NOFILL);
     else
         draw_tool_rect_width_2_and_3(app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
 }
@@ -549,7 +548,7 @@ static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
             tool_start_y = cursor_8u_y;
             // Draw the first rect(1 pixel) XOR style so it can be undrawn
             color(BLACK,WHITE,XOR);
-            box(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y, tool_fillstyle);
+            box(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y, M_NOFILL);
 
             // Set rect starting point
             app_state.draw_tool_using_b_button_action = true;
@@ -576,7 +575,7 @@ static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         // But only if the cursor moved (so it remains visible), it's being canceled, or being finalized (to take a clean undo snapshot)
         if (current_action != DRAW_ACTION_IDLE) {
             color(BLACK,WHITE,XOR);
-            box(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y, tool_fillstyle);
+            box(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y, M_NOFILL);
         }
 
         // If finalizing is requested, draw it normally
@@ -590,7 +589,7 @@ static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
 
             drawing_set_to_main_colors();
             if (app_state.draw_width == DRAW_WIDTH_MODE_1)
-                box(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y, tool_fillstyle);
+                box(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y, M_NOFILL);
             else
                 draw_tool_rect_width_2_and_3(cursor_8u_x, cursor_8u_y);
 
@@ -606,7 +605,7 @@ static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         else if (current_action == DRAW_ACTION_NEW_DRAW_POSITION) {
             // If moved, update the preview to the new position, XOR draw so it can be un-drawn later
             color(BLACK,WHITE,XOR);
-            box(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y, tool_fillstyle);
+            box(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y, M_NOFILL);
         }
     }
 }
@@ -648,7 +647,7 @@ static void draw_tool_rect_circle_1(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
             circle(tool_start_x, tool_start_y, radius, M_FILL);
 
         drawing_set_to_main_colors();
-        circle(tool_start_x, tool_start_y, radius, tool_fillstyle);
+        circle(tool_start_x, tool_start_y, radius, M_NOFILL);
     }
 }
 
@@ -685,28 +684,28 @@ static void draw_tool_rect_circle_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u
     drawing_set_to_main_colors();
 
     // First circle
-    circle(tool_start_x, tool_start_y, radius, tool_fillstyle);
+    circle(tool_start_x, tool_start_y, radius, M_NOFILL);
 
     if (app_state.draw_width == DRAW_WIDTH_MODE_2) {
     // Second
     // (Triple draw shifted left and up instead of "radius--" since integer stepping means
     // there would be gaps between the two circle lines in some areas
-    circle(tool_start_x - 1u, tool_start_y,      radius, tool_fillstyle);
-    circle(tool_start_x     , tool_start_y - 1u, radius, tool_fillstyle);
-    circle(tool_start_x - 1u, tool_start_y - 1u, radius, tool_fillstyle);
+    circle(tool_start_x - 1u, tool_start_y,      radius, M_NOFILL);
+    circle(tool_start_x     , tool_start_y - 1u, radius, M_NOFILL);
+    circle(tool_start_x - 1u, tool_start_y - 1u, radius, M_NOFILL);
 
 
     // Third circle if applicable (shifted right and down)
     } else { // if (app_state.draw_width == DRAW_WIDTH_MODE_3) {
 
         //
-        circle(tool_start_x,      tool_start_y, radius + 1u, tool_fillstyle);
-        circle(tool_start_x,      tool_start_y, radius - 1u, tool_fillstyle);
+        circle(tool_start_x,      tool_start_y, radius + 1u, M_NOFILL);
+        circle(tool_start_x,      tool_start_y, radius - 1u, M_NOFILL);
 
-        circle(tool_start_x - 1u, tool_start_y,      radius, tool_fillstyle);
-        circle(tool_start_x     , tool_start_y - 1u, radius, tool_fillstyle);
-        circle(tool_start_x + 1u, tool_start_y,      radius, tool_fillstyle);
-        circle(tool_start_x     , tool_start_y + 1u, radius, tool_fillstyle);
+        circle(tool_start_x - 1u, tool_start_y,      radius, M_NOFILL);
+        circle(tool_start_x     , tool_start_y - 1u, radius, M_NOFILL);
+        circle(tool_start_x + 1u, tool_start_y,      radius, M_NOFILL);
+        circle(tool_start_x     , tool_start_y + 1u, radius, M_NOFILL);
     }
 }
 
@@ -714,7 +713,7 @@ static void draw_tool_rect_circle_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u
 static void draw_tool_circle_finalize_last_preview(void) {
     // Undraw last preview
     color(BLACK,WHITE,XOR);
-    circle(tool_start_x, tool_start_y, get_radius(app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y), tool_fillstyle);
+    circle(tool_start_x, tool_start_y, get_radius(app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y), M_NOFILL);
 
     // Take undo snapshot
     drawing_take_undo_snapshot();
@@ -743,7 +742,7 @@ static void draw_tool_circle(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
                 tool_start_y = cursor_8u_y;
                 // Draw the first XOR style so it can be undrawn
                 color(BLACK,WHITE,XOR);
-                circle(tool_start_x, tool_start_y, get_radius(cursor_8u_x, cursor_8u_y), tool_fillstyle);
+                circle(tool_start_x, tool_start_y, get_radius(cursor_8u_x, cursor_8u_y), M_NOFILL);
 
                 // Set starting point
                 app_state.draw_tool_using_b_button_action = true;
@@ -771,7 +770,7 @@ static void draw_tool_circle(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         // But only if the cursor moved (so it remains visible), it's being canceled, or being finalized (to take a clean undo snapshot)
         if (current_action != DRAW_ACTION_IDLE) {
             color(BLACK,WHITE,XOR);
-            circle(tool_start_x, tool_start_y, get_radius(app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y), tool_fillstyle);
+            circle(tool_start_x, tool_start_y, get_radius(app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y), M_NOFILL);
         }
 
         // If finalizing is requested, draw it normally
@@ -796,7 +795,7 @@ static void draw_tool_circle(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         else if (current_action == DRAW_ACTION_NEW_DRAW_POSITION) {
             // If moved, update the preview to the new position, XOR draw so it can be un-drawn later
             color(BLACK,WHITE,XOR);
-            circle(tool_start_x, tool_start_y, get_radius(cursor_8u_x, cursor_8u_y), tool_fillstyle);
+            circle(tool_start_x, tool_start_y, get_radius(cursor_8u_x, cursor_8u_y), M_NOFILL);
         }
     }
 }
