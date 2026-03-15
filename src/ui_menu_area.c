@@ -73,6 +73,7 @@ void ui_redraw_menus_all(void) NONBANKED {
 
     ui_cursor_speed_redraw_indicator();
     ui_draw_width_redraw_indicator();
+    ui_fill_style_redraw_indicator();
     ui_confirm_check_update(UI_CONFIRM_FORCE_REDRAW);
 
     DISPLAY_ON;
@@ -91,8 +92,14 @@ void ui_handle_menu_area(uint8_t cursor_8u_x, uint8_t cursor_8u_y) BANKED {
         }
     } // Partition the screen left/right
     else if (cursor_8u_x <= TOOLS_MENU_X_END) {
+        // Check clear button first, at bottom area below tools (test Y first since most likely to fail)
+        if ((cursor_8u_y >= CLEAR_BUTTON_Y_START) && (cursor_8u_y < CLEAR_BUTTON_Y_END)) {
+            if ((cursor_8u_x >= CLEAR_BUTTON_X_START) && (cursor_8u_x < CLEAR_BUTTON_X_END)) {
+                if (KEY_TICKED(UI_ACTION_BUTTON)) drawing_clear();
+            }
+        }
         // Tools Menu
-        if ((cursor_8u_x >= TOOLS_MENU_X_START) && (cursor_8u_x < TOOLS_MENU_X_END) &&
+        else if ((cursor_8u_x >= TOOLS_MENU_X_START) && (cursor_8u_x < TOOLS_MENU_X_END) &&
             (cursor_8u_y >= TOOLS_MENU_Y_START) && (cursor_8u_y < TOOLS_MENU_Y_END)) {
             ui_menu_tools(cursor_8u_y);
         }
@@ -243,7 +250,7 @@ static void ui_menu_right(uint8_t cursor_8u_y) {
             case RIGHT_MENU_SPEED:      ui_cursor_cycle_speed();
                                         break;
 
-            case RIGHT_MENU_CLEAR:      drawing_clear();
+            case RIGHT_MENU_FILL_STYLE_IND: ui_fill_style_cycle();
                                         break;
 
             case RIGHT_MENU_PRINT:      ui_print_confirm_check_show();
@@ -328,6 +335,12 @@ static void ui_perform_redo(void) {
 void ui_draw_width_redraw_indicator(void) BANKED {
     uint8_t spr_x = DRAW_WIDTH_IND_SPR_X + (app_state.draw_width * DRAW_WIDTH_SPR_STEP_X);
     move_sprite(SPRITE_ID_DRAW_WIDTH_IND, spr_x, DRAW_WIDTH_IND_SPR_Y);
+}
+
+
+void ui_fill_style_redraw_indicator(void) BANKED {
+    uint8_t spr_x = FILL_STYLE_IND_SPR_X + (app_state.fill_style * FILL_STYLE_SPR_STEP_X);
+    move_sprite(SPRITE_ID_FILL_STYLE_IND, spr_x, FILL_STYLE_IND_SPR_Y);
 }
 
 

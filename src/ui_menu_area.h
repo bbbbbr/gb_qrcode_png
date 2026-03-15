@@ -35,6 +35,16 @@
 #define TOOLS_MENU_Y_END  ((TOOLS_MENU_Y_START) + (TOOLS_MENU_HEIGHT))
 
 
+#define CLEAR_BUTTON_X_START 6u
+#define CLEAR_BUTTON_Y_START 124u
+
+#define CLEAR_BUTTON_WIDTH  20u
+#define CLEAR_BUTTON_HEIGHT 15u
+
+#define CLEAR_BUTTON_X_END  ((CLEAR_BUTTON_X_START) + CLEAR_BUTTON_WIDTH)
+#define CLEAR_BUTTON_Y_END  ((CLEAR_BUTTON_Y_START) + (CLEAR_BUTTON_HEIGHT))
+
+
 // ===== RIGHT MENU =====
 
 #define RIGHT_MENU_ITEM_WIDTH  20u
@@ -96,9 +106,16 @@
 
     // Draw Width indicator button
     #define DRAW_WIDTH_IND_SPR_X                ((RIGHT_MENU_X_START) + (uint8_t)DEVICE_SPRITE_PX_OFFSET_X)
-    #define DRAW_WIDTH_IND_SPR_Y                ((RIGHT_MENU_Y_START + ((RIGHT_MENU_DRAW_WIDTH - 1u) * RIGHT_MENU_ITEM_HEIGHT) + 11u) + (uint8_t)DEVICE_SPRITE_PX_OFFSET_Y)
+    #define DRAW_WIDTH_IND_SPR_Y                ((RIGHT_MENU_Y_START + ((RIGHT_MENU_DRAW_WIDTH_IND) * RIGHT_MENU_ITEM_HEIGHT) + 11u) + (uint8_t)DEVICE_SPRITE_PX_OFFSET_Y)
 
     #define DRAW_WIDTH_SPR_STEP_X               7u
+
+    // Draw Width indicator button
+    #define FILL_STYLE_IND_SPR_X                ((RIGHT_MENU_X_START) + (uint8_t)DEVICE_SPRITE_PX_OFFSET_X + 1u)
+    #define FILL_STYLE_IND_SPR_Y                ((RIGHT_MENU_Y_START + ((RIGHT_MENU_FILL_STYLE_IND) * RIGHT_MENU_ITEM_HEIGHT) + 11u) + (uint8_t)DEVICE_SPRITE_PX_OFFSET_Y)
+
+    #define FILL_STYLE_SPR_STEP_X               6u
+
 
     // Print
     // File confirm check sprite
@@ -139,6 +156,7 @@ void ui_redo_button_refresh(void) BANKED;
 
 void ui_cursor_speed_redraw_indicator(void) NONBANKED;
 void ui_draw_width_redraw_indicator(void) BANKED;
+void ui_fill_style_redraw_indicator(void) BANKED;
 
 void ui_confirm_check_update(bool force_redraw) BANKED;
 

@@ -8,6 +8,7 @@ void ui_update(void) BANKED;
 void ui_redraw_full(void) BANKED;
 
 void ui_draw_width_cycle(void) BANKED;
+void ui_fill_style_cycle(void) BANKED;
 
 void ui_cursor_speed_update_settings(void) BANKED;
 

@@ -172,6 +172,19 @@ enum {
 
 
 enum {
+    FILL_STYLE_MODE_MIN,
+
+    FILL_STYLE_MODE_HOLLOW = FILL_STYLE_MODE_MIN,
+    FILL_STYLE_MODE_SOLID_FG,
+    FILL_STYLE_MODE_SOLID_BG,
+
+    FILL_STYLE_MODE_MAX = FILL_STYLE_MODE_SOLID_BG,
+    FILL_STYLE_MODE_DEFAULT = FILL_STYLE_MODE_HOLLOW,
+    FILL_STYLE_MODE_COUNT = ((FILL_STYLE_MODE_MAX - FILL_STYLE_MODE_MIN) + 1u)
+};
+
+
+enum {
     CURSOR_TELEPORT_MIN,
 
     CURSOR_TELEPORT_DRAWING = CURSOR_TELEPORT_MIN,
@@ -208,7 +221,7 @@ enum {
     RIGHT_MENU_COLOR_SWAP,
     RIGHT_MENU_DRAW_WIDTH_IND,
     RIGHT_MENU_SPEED,
-    RIGHT_MENU_CLEAR,
+    RIGHT_MENU_FILL_STYLE_IND,
     RIGHT_MENU_PRINT,
 
     RIGHT_MENU_MAX   = RIGHT_MENU_PRINT,
@@ -279,6 +292,7 @@ typedef struct app_state_t {
     uint8_t draw_color_main;
     uint8_t draw_color_bg;
     uint8_t draw_width;
+    uint8_t fill_style;
 
 } app_state_t;
 

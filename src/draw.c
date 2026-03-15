@@ -25,6 +25,8 @@ enum {
 
 #define TOOL_ERASER_SIZE  4u
 
+static bool drawing_check_fillable_and_set_colors(void);
+
 static uint8_t get_radius(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 
 // Width variations for tools
@@ -77,6 +79,18 @@ void drawing_set_to_alt_colors(void) BANKED {
 }
 
 
+static bool drawing_check_fillable_and_set_colors(void) {
+    switch (app_state.fill_style) {
+        case FILL_STYLE_MODE_SOLID_FG: color(app_state.draw_color_main, app_state.draw_color_main, SOLID);
+                                       return true;
+        case FILL_STYLE_MODE_SOLID_BG: color(app_state.draw_color_bg, app_state.draw_color_bg, SOLID);
+                                       return true;
+        default:
+        case FILL_STYLE_MODE_HOLLOW: return false;
+    }
+}
+
+
 void drawing_clear(void) BANKED {
 
     drawing_take_undo_snapshot();
@@ -119,7 +133,7 @@ void draw_update(uint8_t cursor_8u_x, uint8_t cursor_8u_y) BANKED {
 
 
 // Clear any pending tool behavior and state
-// May be called when switching tools/etc
+// May be called when switching tools / starting qrcode generation / etc
 void draw_tools_cancel_and_reset(void) BANKED {
 
     if (app_state.tool_currently_drawing) {
@@ -511,6 +525,11 @@ static void draw_tool_rect_finalize_last_preview(void) {
     drawing_take_undo_snapshot();
 
     // Draw finalized version
+
+    // If either solid drawing mode (bg or fg), first draw a solid rect underneath in the specified color
+    if (drawing_check_fillable_and_set_colors())
+        box(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y, M_FILL);
+
     drawing_set_to_main_colors();
     if (app_state.draw_width == DRAW_WIDTH_MODE_1)
         box(tool_start_x, tool_start_y, app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y, tool_fillstyle);
@@ -564,6 +583,10 @@ static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         if (current_action == DRAW_ACTION_FINALIZE) {
             // Finalize
             drawing_take_undo_snapshot();
+
+            // If either solid drawing mode (bg or fg), first draw a solid rect underneath in the specified color
+            if (drawing_check_fillable_and_set_colors())
+                box(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y, M_FILL);
 
             drawing_set_to_main_colors();
             if (app_state.draw_width == DRAW_WIDTH_MODE_1)
@@ -619,7 +642,14 @@ static void draw_tool_rect_circle_1(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
     uint8_t radius = get_radius(cursor_8u_x, cursor_8u_y);
 
     if (radius == 0) plot_point(tool_start_x, tool_start_y);
-    else circle(tool_start_x, tool_start_y, radius, tool_fillstyle);
+    else {
+        // If either solid drawing mode (bg or fg), first draw a solid rect underneath in the specified color
+        if (drawing_check_fillable_and_set_colors())
+            circle(tool_start_x, tool_start_y, radius, M_FILL);
+
+        drawing_set_to_main_colors();
+        circle(tool_start_x, tool_start_y, radius, tool_fillstyle);
+    }
 }
 
 
@@ -647,6 +677,12 @@ static void draw_tool_rect_circle_2_and_3(uint8_t cursor_8u_x, uint8_t cursor_8u
         if ((start_x + radius) > (IMG_X_END   - 1u)) radius--;
         if ((start_y + radius) > (IMG_Y_END   - 1u)) radius--;
     }
+
+    // If either solid drawing mode (bg or fg), first draw a solid rect underneath in the specified color
+    if (drawing_check_fillable_and_set_colors())
+        circle(tool_start_x, tool_start_y, radius, M_FILL);
+
+    drawing_set_to_main_colors();
 
     // First circle
     circle(tool_start_x, tool_start_y, radius, tool_fillstyle);
@@ -684,7 +720,6 @@ static void draw_tool_circle_finalize_last_preview(void) {
     drawing_take_undo_snapshot();
 
     // Draw finalized version
-    drawing_set_to_main_colors();
     if (app_state.draw_width == DRAW_WIDTH_MODE_1) {
         draw_tool_rect_circle_1(app_state.draw_cursor_8u_last_x, app_state.draw_cursor_8u_last_y);
     } else
@@ -744,7 +779,6 @@ static void draw_tool_circle(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
             // Finalize
             drawing_take_undo_snapshot();
 
-            drawing_set_to_main_colors();
             if (app_state.draw_width == DRAW_WIDTH_MODE_1)
                 draw_tool_rect_circle_1(cursor_8u_x, cursor_8u_y);
             else
