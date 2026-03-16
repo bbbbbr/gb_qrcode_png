@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include <gb/drawing.h>
+#include <rand.h>
 
 
 #include "platform_cart_type.h"
@@ -43,6 +44,7 @@ static void draw_tool_rect(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static void draw_tool_circle(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static void draw_tool_eraser(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static void draw_tool_floodfill(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
+static void draw_tool_spray(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 
 // Should now only be (indirectly) called by ui_redraw_full()
 // Can be remove if QRCode is changed from always-available START button press to a menu icon (that can't be accessed when tools are actively drawing)
@@ -123,6 +125,8 @@ void draw_update(uint8_t cursor_8u_x, uint8_t cursor_8u_y) BANKED {
         case DRAW_TOOL_CIRCLE: draw_tool_circle(cursor_8u_x,cursor_8u_y);
             break;
         case DRAW_TOOL_FLOODFILL: draw_tool_floodfill(cursor_8u_x,cursor_8u_y);
+            break;
+        case DRAW_TOOL_SPRAY: draw_tool_spray(cursor_8u_x,cursor_8u_y);
             break;
     }
 
@@ -930,3 +934,127 @@ static void draw_tool_floodfill(uint8_t x, uint8_t y) {
     }
 }
 
+
+// 8x8 filled circle shape of pixels in randomized order
+// with Y in high nibble and X in low nibble. Non-filled
+// pixels are omitted from the list.
+//
+// Randomized with a preferred (when possible) minimum
+// euclidean distance of 3 between consecutive values.
+//
+// When active the tool cycles through the pixel array drawing
+// single values as spray and wraps around to the start to continue.
+//
+// Also rate-limits
+const uint8_t spray_rand_sequence[] = {
+                0x27, 0x62, 0x25, 0x02,
+          0x16, 0x75, 0x42, 0x56, 0x41, 0x12,
+    0x44, 0x04, 0x43, 0x72, 0x15, 0x61, 0x13, 0x66,
+    0x34, 0x47, 0x63, 0x23, 0x51, 0x36, 0x03, 0x40,
+    0x26, 0x31, 0x55, 0x20, 0x05, 0x64, 0x35, 0x52,
+    0x24, 0x11, 0x73, 0x37, 0x32, 0x46, 0x33, 0x57,
+          0x50, 0x45, 0x22, 0x74, 0x21, 0x65,
+                0x30, 0x53, 0x14, 0x54
+};
+
+#define SPRAY_SZ_MODE_1 8u
+#define SPRAY_SZ_MODE_2 12u
+#define SPRAY_SZ_MODE_3 16u
+
+#define SPRAY_RATE_THRESH_MODE_1 1u   // 50% duty cycle
+#define SPRAY_RATE_THRESH_MODE_2 3u   // 66% duty cycle
+#define SPRAY_RATE_THRESH_MODE_3 255u // ~100% duty cycle
+
+#define SPRAY_SEQ_SZ ARRAY_LEN(spray_rand_sequence)
+
+static void draw_tool_spray(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
+
+    static uint8_t spray_rate_threshold = 0u;
+    static uint8_t spray_rate_count = 0u;
+    static uint8_t spray_idx = 0u;
+    static uint8_t spray_bit_offset = 0u;
+    static uint8_t centering_offset = 0u;
+    uint8_t x,y;
+
+    // Start drawing
+    if (KEY_TICKED(DRAW_MAIN_BUTTON)) {
+        // Take a undo snapshot only at the start of a drawing segment
+        if (tool_undo_snapshot_taken == false) {
+            drawing_take_undo_snapshot();
+            tool_undo_snapshot_taken = true;
+            spray_rate_count = 0u;
+
+            // Cache draw offset
+            switch (app_state.draw_width) {
+                case DRAW_WIDTH_MODE_1: centering_offset = SPRAY_SZ_MODE_1 / 2;
+                                        spray_rate_threshold = SPRAY_RATE_THRESH_MODE_1;
+                                        break;
+                case DRAW_WIDTH_MODE_2: centering_offset = SPRAY_SZ_MODE_2 / 2;
+                                        spray_rate_threshold = SPRAY_RATE_THRESH_MODE_2;
+                                        break;
+                case DRAW_WIDTH_MODE_3: centering_offset = SPRAY_SZ_MODE_3 / 2;
+                                        spray_rate_threshold = SPRAY_RATE_THRESH_MODE_3;
+                                        break;
+            }
+        }
+        app_state.tool_currently_drawing = true;
+    }
+    else if (KEY_RELEASED(DRAW_MAIN_BUTTON)) {
+        // End Drawing
+        tool_undo_snapshot_taken = false;
+        app_state.tool_currently_drawing = false;
+    }
+
+    // Draw if active
+    if (app_state.tool_currently_drawing) {
+
+        // Rate limit the pixel flow based on brush size
+        if (spray_rate_count > spray_rate_threshold) spray_rate_count = 0u;
+        if (spray_rate_count++ < spray_rate_threshold) {
+
+            // Step to the next randomized pixel position
+            // in the 8x8 spray brush LUT and read an x,y pair.
+            // Wrap if needed
+            spray_idx++;
+            if (spray_idx == SPRAY_SEQ_SZ) {
+                spray_idx = 0u;
+                // Increment here as well as per-pixel to go in/out of alignment with spray_idx.
+                spray_bit_offset++;
+            }
+            uint8_t pixel_yx = spray_rand_sequence[spray_idx];
+
+            // Scale up the 8x8 spray brush LUT based on draw width
+            if (app_state.draw_width == DRAW_WIDTH_MODE_1) {
+                // 8x8 sized circular spray brush
+                x = (pixel_yx & 0x0Fu);
+                y = (pixel_yx >> 4);
+            } else if (app_state.draw_width == DRAW_WIDTH_MODE_2) {
+                // 1.5x up-scale 12x12 sized circular spray brush
+                // Bit offset used to diffuse upscaling scaling offsets over time
+                x = (pixel_yx & 0x0Fu);
+                y = (pixel_yx >> 4);
+                x = x + x + x + (spray_bit_offset        & 0x01u);
+                y = y + y + y + ((spray_bit_offset >> 1) & 0x01u);
+                x /= 2;
+                y /= 2;
+                spray_bit_offset++;
+            } else { // Implied: if (app_state.draw_width == DRAW_WIDTH_MODE_3) {
+                // 2x up-scale 16x16 sized circular spray brush
+                // Bit offset used to diffuse upscaling scaling offsets over time
+                x = ((pixel_yx & 0x0Fu) << 1) + (spray_bit_offset        & 0x01u);
+                y = (pixel_yx >> 3)           + ((spray_bit_offset >> 1) & 0x01u);
+                spray_bit_offset++;
+            }
+
+            // Center around cursor
+            x = x + cursor_8u_x - centering_offset;
+            y = y + cursor_8u_y - centering_offset;
+
+            // Clip and draw
+            if ((x >= IMG_X_START) && (x <= IMG_X_END) &&
+                (y >= IMG_Y_START) && (y <= IMG_Y_END)) {
+                plot_point(x, y);
+            }
+        }
+    }
+}

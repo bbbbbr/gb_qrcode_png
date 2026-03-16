@@ -22,15 +22,6 @@
 
 #pragma bank 255  // Autobanked
 
-const uint8_t menu_tools[DRAW_TOOL_COUNT] = {
-    DRAW_TOOL_PENCIL,
-    DRAW_TOOL_LINE,
-    DRAW_TOOL_ERASER,
-    DRAW_TOOL_RECT,
-    DRAW_TOOL_CIRCLE,
-    DRAW_TOOL_FLOODFILL,
-};
-
 static void ui_menu_tools(uint8_t cursor_8u_y);
 static void ui_menu_file(uint8_t cursor_8u_x);
 static void ui_menu_right(uint8_t cursor_8u_y);
@@ -152,10 +143,11 @@ static void ui_menu_tools(uint8_t cursor_8u_y) {
 void ui_menu_tools_draw_highlight(uint8_t tool_num, uint8_t draw_color) BANKED {
 
     uint8_t x1 =  TOOLS_MENU_X_START;
-    uint8_t y1 = (tool_num * TOOLS_MENU_ITEM_HEIGHT) + TOOLS_MENU_Y_START;
+    // -1 offset is to oversize the highlight on the top into the tool icon above to give a little more space
+    uint8_t y1 = (tool_num * TOOLS_MENU_ITEM_HEIGHT) + TOOLS_MENU_Y_START - 1u;
 
     color(draw_color, WHITE, SOLID);
-    box(x1, y1, x1 + (TOOLS_MENU_ITEM_WIDTH - 1u), y1 + (TOOLS_MENU_ITEM_HEIGHT - 1u), M_NOFILL);
+    box(x1, y1, x1 + (TOOLS_MENU_ITEM_WIDTH - 1u), y1 + (TOOLS_MENU_ITEM_HEIGHT), M_NOFILL);
 }
 
 
