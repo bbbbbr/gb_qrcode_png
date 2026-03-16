@@ -16,7 +16,7 @@ Downloadable ROM available on itch: https://bbbbbr.itch.io/game-boy-qr-paint
 
 ## Features
 - Share drawings as PNG images via QRCode
-- Drawing tools: Pencil, Line, Eraser, Rectangle, Circle, Flood Fill
+- Drawing tools: Pencil, Line, Eraser, Rectangle, Circle, Flood Fill, Spray
 - Undo, Redo stack
 - 3 Drawing Save slots
 - Adjustable Draw Width

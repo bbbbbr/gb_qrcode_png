@@ -1,7 +1,10 @@
 # Changelog
 
+## Version 0.94
+- Added spray tool
+
 ## Version 0.93
-- Selectable fill style for rect and circle
+- Added selectable fill style for rect and circle
 
 ## Version 0.92
 - Added SGB Mouse support
