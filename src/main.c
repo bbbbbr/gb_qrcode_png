@@ -20,6 +20,11 @@
     #include <duck/laptop_io.h>
 #endif
 
+#ifdef EXTRA_HW_USB_MOUSE
+    #include "usb_mouse/usb_mouse.h"
+#endif
+
+
 void make_and_show_qrcode(void);
 void sgb_check_and_init(void);
 
@@ -62,6 +67,7 @@ void main(void)
         megaduck_laptop_detected = duck_io_laptop_init();
     #endif
 
+
     HIDE_SPRITES;
     PLAT_ENABLE_SRAM;
     PLAT_SWITCH_RAM(SRAM_BANK_CALC_BUFFER); // RAM bank 0
@@ -77,6 +83,10 @@ void main(void)
     app_state_reset();
     ui_init();
     draw_init();
+
+    #ifdef EXTRA_HW_USB_MOUSE
+        usb_mouse_install();
+    #endif
 
     help_page_show();
 

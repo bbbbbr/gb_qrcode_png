@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 0.95
+- Added Mouse support with Inside Gadgets USB to link adapter (Game Boy, emulated in MiSTer)
+
 ## Version 0.94
 - Added spray tool
 

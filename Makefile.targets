@@ -26,6 +26,12 @@ gbc:
 	${MAKE} build-target PORT=sm83 PLAT=gb EXT=gbc PLAT_SRC_NAME=gb
 
 
+gbc-usbmouse-clean:
+	${MAKE} clean-target PLAT=gbc EXT=gbc EXTRA_HARDWARE=usb_mouse EXTRA_HW_MOUSE=true
+gbc-usbmouse:
+	${MAKE} build-target PORT=sm83 PLAT=gb EXT=gbc PLAT_SRC_NAME=gb EXTRA_HARDWARE=usb_mouse EXTRA_HW_FLAG=EXTRA_HW_USB_MOUSE
+
+
 pocket-clean:
 	${MAKE} clean-target PLAT=pocket EXT=pocket
 pocket:

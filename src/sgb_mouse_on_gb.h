@@ -18,19 +18,7 @@
 #define SNES_MOUSE_BUTTON_BOTH       (SNES_MOUSE_BUTTON_LEFT | SNES_MOUSE_BUTTON_RIGHT)
 #define SNES_MOUSE_BUTTON_MASK       (SNES_MOUSE_BUTTON_BOTH)
 
-extern int8_t  mouse_x_move;
-extern int8_t  mouse_y_move;
-extern int8_t  mouse_x_move_last;
-extern int8_t  mouse_y_move_last;
-extern uint8_t mouse_buttons;
-extern uint8_t mouse_buttons_last;
-
 void sgb_mouse_install(void) BANKED;
 bool sgb_mouse_input_update(void) BANKED;
-
-
-#define MOUSE_PRESSED(K) (mouse_buttons & (K))
-#define MOUSE_TICKED(K)   ((mouse_buttons & (K)) && !(mouse_buttons_last & (K)))
-#define MOUSE_RELEASED(K) (!(mouse_buttons & (K)) && (mouse_buttons_last & (K)))
 
 #endif // _SGB_MOUSE_ON_GB_H

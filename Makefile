@@ -7,12 +7,12 @@ endif
 LCC = $(GBDK_HOME)bin/lcc
 PNG2ASSET = $(GBDK_HOME)bin/png2asset
 
-VERSION=0.9.4
+VERSION=0.9.5
 
 # Set platforms to build here, spaced separated. (These are in the separate Makefile.targets)
 # They can also be built/cleaned individually: "make gg" and "make gg-clean"
 # Possible are: gb gbc pocket megaduck sms gg
-TARGETS= gbc pocket megaduck duck-mbc5 # gb sms gg nes
+TARGETS= gbc pocket megaduck duck-mbc5 gbc-usbmouse # gb sms gg nes
 
 # Configure platform specific LCC flags here:
 LCCFLAGS_gb      = # -Wl-yt0x1B # Set an MBC for banking (1B-ROM+MBC5+RAM+BATT)
@@ -52,6 +52,11 @@ ifeq ($(PLAT),duck)
 	CFLAGS += -DCART_TYPE_$(CART_TYPE)=1
 endif
 
+ifdef EXTRA_HARDWARE
+	PLAT_HW_SUB =_$(EXTRA_HARDWARE)
+	CFLAGS += -D$(EXTRA_HW_FLAG)=1
+endif
+
 # Higher optimization (slow builds)
 # LCCFLAGS += -Wf--max-allocs-per-node200000
 
@@ -83,10 +88,11 @@ PACKAGE_DIR = "../build_archive/$(VERSION)"
 SRCDIR      = src
 PLAT_SRCDIR = $(SRCDIR)/$(PLAT_SRC_NAME)
 PLAT_MBC_SRCDIR = $(SRCDIR)/$(PLAT_SRC_NAME)_$(CART_TYPE)
-OBJDIR      = obj/$(EXT)$(PLAT_SUB_EXT)
+HW_EXTRA_SRCDIR = $(SRCDIR)/$(EXTRA_HARDWARE)
+OBJDIR      = obj/$(EXT)$(PLAT_HW_SUB)$(PLAT_SUB_EXT)
 RESOBJSRC   = $(OBJDIR)/res
 RESDIR      = res
-BINDIR      = build/$(EXT)$(PLAT_SUB_EXT)
+BINDIR      = build/$(EXT)$(PLAT_HW_SUB)$(PLAT_SUB_EXT)
 SAVDIR      = sav
 MKDIRS      = $(OBJDIR) $(BINDIR) $(RESOBJSRC) # See bottom of Makefile for directory auto-creation
 
@@ -102,10 +108,12 @@ BINS	    = $(OBJDIR)/$(PROJECTNAME).$(EXT)$(PLAT_SUB_EXT)
 CSOURCES    = $(foreach dir,$(SRCDIR),$(notdir $(wildcard $(dir)/*.c))) $(foreach dir,$(RESDIR),$(notdir $(wildcard $(dir)/*.c)))
 CSOURCES    += $(foreach dir,$(PLAT_SRCDIR),$(notdir $(wildcard $(dir)/*.c)))
 CSOURCES    += $(foreach dir,$(PLAT_MBC_SRCDIR),$(notdir $(wildcard $(dir)/*.c)))
+CSOURCES    += $(foreach dir,$(HW_EXTRA_SRCDIR),$(notdir $(wildcard $(dir)/*.c)))
 
 ASMSOURCES  = $(foreach dir,$(SRCDIR),$(notdir $(wildcard $(dir)/*.s)))
 ASMSOURCES  += $(foreach dir,$(PLAT_SRCDIR),$(notdir $(wildcard $(dir)/*.s)))
 ASMSOURCES  += $(foreach dir,$(PLAT_MBC_SRCDIR),$(notdir $(wildcard $(dir)/*.s)))
+ASMSOURCES  += $(foreach dir,$(HW_EXTRA_SRCDIR),$(notdir $(wildcard $(dir)/*.s)))
 
 OBJS        = $(CSOURCES:%.c=$(OBJDIR)/%.o) $(ASMSOURCES:%.s=$(OBJDIR)/%.o)
 
@@ -137,8 +145,12 @@ $(OBJDIR)/%.o:	$(SRCDIR)/%.c
 $(OBJDIR)/%.o:	$(PLAT_SRCDIR)/%.c
 	$(LCC) $(CFLAGS) -c -o $@ $<
 
-# Compile .c files in "src/$(plat)_$(carttype)" to .o object files
+# Compile .c files in "src/$(plat)_$(CART_TYPE)" to .o object files
 $(OBJDIR)/%.o:	$(PLAT_MBC_SRCDIR)/%.c
+	$(LCC) $(CFLAGS) -c -o $@ $<
+
+# Compile .c files in "src/$(plat)_$(HW_EXTRA_SRC)" to .o object files
+$(OBJDIR)/%.o:	$(HW_EXTRA_SRCDIR)/%.c
 	$(LCC) $(CFLAGS) -c -o $@ $<
 
 # Compile .c files in "res/" to .o object files
@@ -155,6 +167,10 @@ $(OBJDIR)/%.o:	$(PLAT_SRCDIR)/%.s
 
 # Assemble .s files in "src/$(plat)_$(carttype)" to .o object files
 $(OBJDIR)/%.o:	$(PLAT_MBC_SRCDIR)/%.s
+	$(LCC) $(CFLAGS) -c -o $@ $<
+
+# Assemble .s files in "src/$(plat)_$(CART_TYPE)" to .o object files
+$(OBJDIR)/%.o:	$(HW_EXTRA_SRCDIR)/%.s
 	$(LCC) $(CFLAGS) -c -o $@ $<
 
 # If needed, compile .c files in "src/" to .s assembly files
@@ -207,6 +223,7 @@ package:
 	mkdir -p "$(PACKAGE_DIR)"
 	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_megaduck.zip"            Changelog.md LICENSE README.md build/duck.md2/*.duck.md2 build/duck.mbc5/*.duck.mbc5 $(SAVDIR)/$(PROJECTNAME).sav
 	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_gameboy.zip"             Changelog.md LICENSE README.md build/gbc/*.gbc $(SAVDIR)/$(PROJECTNAME).sav
+	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_gameboy_usb_mouse.zip"   Changelog.md LICENSE README.md build/gbc_usb_mouse/*.gbc $(SAVDIR)/$(PROJECTNAME).sav
 	zip -j -9 "$(PACKAGE_DIR)/$(VERSION)_$(PROJECTNAME)_analogue_pocket.zip"     Changelog.md LICENSE README.md build/pocket/*.pocket $(SAVDIR)/$(PROJECTNAME).sav
 
 

@@ -8,6 +8,7 @@
 #include "platform_cart_type.h"
 #include "common.h"
 #include "input.h"
+#include "input_mouse.h"
 
 #include "draw.h"
 #include "ui_main.h"
@@ -15,6 +16,9 @@
 #include "sprites.h"
 
 #include "sgb_mouse_on_gb.h"
+#ifdef EXTRA_HW_USB_MOUSE
+    #include "usb_mouse/usb_mouse.h"
+#endif
 
 // Image data
 #include <ui_main_bg.h>      // BG APA style image
@@ -38,7 +42,7 @@ static inline void ui_clamp_cursor_to_draw_area(void);
 static inline void ui_cursor_teleport_update(bool cursor_in_drawing, uint16_t cursor_last_x, uint16_t cursor_last_y);
 static void ui_process_input(bool cursor_in_drawing);
 
-static void ui_handle_input_sgb_mouse(bool cursor_in_drawing);
+static void ui_handle_input_mouse(bool cursor_in_drawing);
 
 void ui_init(void) NONBANKED {
     HIDE_BKG;
@@ -156,7 +160,7 @@ void ui_fill_style_cycle(void) BANKED {
 
 void ui_cursor_speed_update_settings(void) BANKED {
 
-    // SGB Mouse speed settings handled separately in ui_handle_input_sgb_mouse()
+    // Mouse speed settings handled separately in ui_handle_input_mouse()
 
     cursor_continuous_move = true;
     // Set acceleration factor and max speed
@@ -380,7 +384,13 @@ static void ui_process_input(bool cursor_in_drawing) {
     cursor_last_x = app_state.cursor_x;
     cursor_last_y = app_state.cursor_y;
 
-    if (sgb_found) ui_handle_input_sgb_mouse(cursor_in_drawing);
+    #ifdef EXTRA_HW_USB_MOUSE
+        // For USB Link port mouse build, it's assumed the mouse is connected
+        // (SGB Mouse might also be present in this case)
+        ui_handle_input_mouse(cursor_in_drawing);
+    #else
+        if (sgb_found) ui_handle_input_mouse(cursor_in_drawing);
+    #endif
 
     if ((!cursor_in_drawing) || KEY_PRESSED(UI_CURSOR_SPEED_BUTTON)) {
         // For the main UI area there is only one speed of cursor movement (fast, with no inertia)
@@ -446,7 +456,7 @@ static void ui_process_input(bool cursor_in_drawing) {
 }
 
 
-static void ui_handle_input_sgb_mouse(bool cursor_in_drawing) {
+static void ui_handle_input_mouse(bool cursor_in_drawing) {
 
     // For SGB Mouse button mapping onto J_A and J_B see UPDATE_KEYS()
 
@@ -456,14 +466,25 @@ static void ui_handle_input_sgb_mouse(bool cursor_in_drawing) {
     // which yields jagged steps, blend current + previous deltas
     bool fast_2x_add_prev_frame_deltas = false;
 
-    if (sgb_mouse_input_is_valid) {
+    if (mouse_input_is_valid) {
 
         if ((!cursor_in_drawing) || KEY_PRESSED(UI_CURSOR_SPEED_BUTTON)) {
-            delta_x = mouse_x_move << MOUSE_ACCEL_UPSHIFT_FAST;
-            delta_y = mouse_y_move << MOUSE_ACCEL_UPSHIFT_FAST;
-            fast_2x_add_prev_frame_deltas = true;
+
+            #ifdef EXTRA_HW_USB_MOUSE
+                // Slower UI speed for USB mouse since they can be much more sensitive
+                if (mouse_type == MOUSE_TYPE_USB) {
+                    delta_x = mouse_x_move << MOUSE_ACCEL_UPSHIFT_SLOW;
+                    delta_y = mouse_y_move << MOUSE_ACCEL_UPSHIFT_SLOW;
+                }
+                else
+            #endif
+            {
+                delta_x = mouse_x_move << MOUSE_ACCEL_UPSHIFT_FAST;
+                delta_y = mouse_y_move << MOUSE_ACCEL_UPSHIFT_FAST;
+                fast_2x_add_prev_frame_deltas = true;
+            }
         } else {
-            // Split this out instead of using a control var for the amoutn of upshift
+            // Split this out instead of using a control var for the amount of upshift
             // so that hopefully the compiler can optimize the shifts more
             switch (app_state.cursor_speed_mode) {
                 case CURSOR_SPEED_MODE_PIXELSTEP: delta_x = mouse_x_move << MOUSE_ACCEL_UPSHIFT_PIXELSTEP;

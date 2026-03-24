@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "input.h"
+#include "input_mouse.h"
 
 #include "sgb_mouse_on_gb.h"
 
@@ -11,13 +12,6 @@
 
 #define SGB_PACKET_SIZE 16u
 #define SGB_PAYLOAD_LEN (SGB_PACKET_SIZE - 1u)
-
-int8_t  mouse_x_move = 0;
-int8_t  mouse_y_move = 0;
-int8_t  mouse_x_move_last = 0;
-int8_t  mouse_y_move_last = 0;
-uint8_t mouse_buttons = 0u;
-uint8_t mouse_buttons_last = 0u;
 
 // MouseHook:
 //                                   RTS
@@ -118,10 +112,6 @@ bool sgb_mouse_input_update(void) BANKED {
             // since it may result in unintended mouse movement and clicking
             if (joypads.joy3 & SNES_MOUSE_SGB_MENU_OPEN) return false;
 
-            mouse_buttons_last = mouse_buttons;
-            mouse_x_move_last = mouse_x_move;
-            mouse_y_move_last = mouse_y_move;
-
             // // ===== RELATIVE MODE USING MOUSE IN SGB MOUSE HARDWARE FORMAT =====
             //
             mouse_x_move = (joypads.joy1 & SNES_MOUSE_X_MASK);
@@ -130,7 +120,8 @@ bool sgb_mouse_input_update(void) BANKED {
             mouse_y_move = (joypads.joy2 & SNES_MOUSE_Y_MASK);
             if (joypads.joy2 & SNES_MOUSE_Y_DIR) mouse_y_move *= -1;
             
-            mouse_buttons = joypads.joy3;
+            if (joypads.joy3 & SNES_MOUSE_BUTTON_LEFT)  mouse_buttons |= MOUSE_BUTTON_LEFT;
+            if (joypads.joy3 & SNES_MOUSE_BUTTON_RIGHT) mouse_buttons |= MOUSE_BUTTON_RIGHT;
 
             return true;
         }

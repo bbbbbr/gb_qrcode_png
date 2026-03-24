@@ -8,10 +8,10 @@
 #include "platform_cart_type.h"
 #include "common.h"
 #include "input.h"
+#include "input_mouse.h"
 
 #include "save_and_undo.h"
 #include "ui_main.h"
-#include "sgb_mouse_on_gb.h"
 
 #include <gbdk/emu_debug.h>  // Sensitive to duplicated line position across source files
 
@@ -242,7 +242,7 @@ static void draw_tool_pencil(uint8_t cursor_8u_x, uint8_t cursor_8u_y) {
         // So draw line instead to fill any pixel gaps.
         // It's possible the user releases the cursor speed or mouse button with never having
         // moved (!new_cursor_pos), in that case draw without a line to ensure a draw happens.
-        if (new_cursor_pos && (KEY_PRESSED(UI_CURSOR_SPEED_BUTTON) || MOUSE_PRESSED(SNES_MOUSE_BUTTON_LEFT))) {
+        if (new_cursor_pos && (KEY_PRESSED(UI_CURSOR_SPEED_BUTTON) || MOUSE_PRESSED(MOUSE_BUTTON_LEFT))) {
 
             if (app_state.draw_width == DRAW_WIDTH_MODE_1)
                 line(tool_start_x, tool_start_y, cursor_8u_x, cursor_8u_y);

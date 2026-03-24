@@ -23,6 +23,7 @@ Downloadable ROM available on itch: https://bbbbbr.itch.io/game-boy-qr-paint
 - Adjustable Draw speed (Fast, Medium, Slow, Pixel Step)
 - 2 Draw colors (Black and White)
 - SNES Mouse support through Super Game Boy (SGB)
+- Inside Gadgets USB Mouse link adapter Support, supported on MiSTer (Game Boy)
 - Game Boy Printer support
 - Mega Duck Printer support
 
@@ -75,6 +76,13 @@ vinheim3's demo. Thanks for sharing your cool idea and how do it!
 
 For emulators, it's verified as working in Mesen. 
 The SNES mouse should be second controller, it may be a little fast.
+
+
+# USB Mouse
+USB Mouse support is available when using the Inside Gadgets USB Keyboard
+link adapter with [modified firmware](https://github.com/bbbbbr/CH559sdccUSBHost/tree/ig_mouse_adapter)
+that adds mouse support. The MiSTer Game Boy core can optionally emulate
+this link port accessory, including the mouse support.
 
 
 ## Mega Duck

@@ -27,7 +27,6 @@ void UPDATE_KEYS(void); // Switched to Expanded input update with SGB Mouse supp
 
 void waitpadticked_lowcpu(uint8_t button_mask);
 void waitpadup_lowcpu(uint8_t button_mask);
-void input_merge_mouse_buttons(void);
 
 extern uint8_t keys;
 extern uint8_t previous_keys;
@@ -35,7 +34,7 @@ extern uint8_t key_repeat_count;
 extern uint8_t key_repeat_count_last;
 extern joypads_t joypads;
 extern bool sgb_found;
-extern bool sgb_mouse_input_is_valid;
+extern bool mouse_input_is_valid;
 
 #endif // _INPUT_H
 
