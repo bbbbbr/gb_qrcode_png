@@ -37,6 +37,7 @@ Button Controls:
   - Hold Down: Move faster in draw area
 - `SELECT + UP/DOWN`: Adjust Cursor Speed
 - `SELECT + LEFT/RIGHT`: Adjust Drawing Width
+- `SELECT + B/A`: Undo / Redo
 - `START`: Create QRCode
 
 The cursor movement has a small amount of inertia while in the drawing areas.

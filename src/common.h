@@ -20,6 +20,8 @@
 #define SPEED_DOWN_BUTTON           (J_DOWN)
 #define DRAW_WIDTH_UP_BUTTON        (J_RIGHT)
 #define DRAW_WIDTH_DOWN_BUTTON      (J_LEFT)
+#define HOTKEY_UNDO                 (J_B)
+#define HOTKEY_REDO                 (J_A)
 
 // Note these two thresholds overlap somewhat. That's ok.
 // It's to make the cursor speed threshold more responsive

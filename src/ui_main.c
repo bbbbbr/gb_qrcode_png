@@ -13,6 +13,7 @@
 #include "draw.h"
 #include "ui_main.h"
 #include "ui_menu_area.h"
+#include "save_and_undo.h"
 #include "sprites.h"
 
 #include "sgb_mouse_on_gb.h"
@@ -35,6 +36,7 @@ static bool     cursor_continuous_move;
 
 static void ui_draw_width_handle_input(void);
 static void ui_cursor_speed_handle_input(void);
+static void ui_undo_redo_handle_input(void);
 static void ui_cursor_teleport_save_zone(uint8_t teleport_zone_to_save);
 static inline void ui_cursor_update(uint8_t cursor_8u_x, uint8_t cursor_8u_y);
 static inline bool ui_check_cursor_in_draw_area(void);
@@ -89,6 +91,7 @@ void ui_update(void) BANKED {
     if (KEY_PRESSED(UI_SHORTCUT_BUTTON)) {
         ui_cursor_speed_handle_input();
         ui_draw_width_handle_input();
+        ui_undo_redo_handle_input();
     }
     else {
         // Split UI handling between drawing area and UI
@@ -144,6 +147,17 @@ static void ui_draw_width_handle_input(void) {
         if (app_state.draw_width > DRAW_WIDTH_MODE_MIN)
             app_state.draw_width--;
             ui_draw_width_redraw_indicator();
+    }
+}
+
+
+static void ui_undo_redo_handle_input(void) {
+
+    if (KEY_TICKED(HOTKEY_UNDO)) {
+        drawing_restore_undo_snapshot(UNDO_RESTORE_REDO_SNAPSHOT_YES);
+    }
+    else if (KEY_TICKED(HOTKEY_REDO)) {
+        drawing_restore_redo_snapshot();
     }
 }
 

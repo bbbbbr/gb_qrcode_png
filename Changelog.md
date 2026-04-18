@@ -1,5 +1,9 @@
 # Changelog
 
+
+## Version 0.96
+- Added Undo/Redo hotkey as SELECT + B/A
+
 ## Version 0.95
 - Added Mouse support with Inside Gadgets USB to link adapter (Game Boy, emulated in MiSTer)
 
