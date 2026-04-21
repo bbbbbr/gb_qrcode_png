@@ -23,6 +23,13 @@
 //                             Reset to zero when undo snapshot taken
 //                             Incremented when undo snapshot restored / undo_count decremented
 
+#define CRASH_EXPLORE_REDO_COUNT_RESET     0u
+#define CRASH_EXPLORE_REDO_COUNT_THRESHOLD 20u
+static void crash_explore_redo_reset(void);
+static void crash_explore_redo_update(void);
+static uint8_t crash_explore_redo_counter = CRASH_EXPLORE_REDO_COUNT_RESET;
+static uint8_t crash_explore_undo_slot    = DRAW_UNDO_SLOT_MIN;
+
 
 static inline uint8_t get_next_undo_slot(void);
 static inline uint8_t get_previous_undo_slot(void);
@@ -108,6 +115,9 @@ static inline uint8_t get_previous_undo_slot(void) {
 // Undo snapshots are a ring buffer stored in SRAM
 void drawing_take_undo_snapshot(void) BANKED {
 
+    // Whenever an Undo state is made, reset the hidden ui access to browsing raw undo states
+    crash_explore_redo_reset();
+
     // EMU_printf("Undo: Taking (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
     uint8_t sram_bank, sram_slot;
 
@@ -139,6 +149,8 @@ void drawing_take_undo_snapshot(void) BANKED {
 // take_redo_snapshot is (currently) only false when called for QR code generating
 // If sram size is increased the qrcode snapshotting could be split off from the undo stack and remove the need for this
 void drawing_restore_undo_snapshot(bool take_redo_snapshot) BANKED {
+
+    crash_explore_redo_reset();
 
     // EMU_printf("Undo: Restore requested (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
     uint8_t sram_bank, sram_slot;
@@ -208,9 +220,44 @@ void drawing_restore_redo_snapshot(void) BANKED {
 
         app_state.next_undo_slot = get_next_undo_slot();
 
+        crash_explore_redo_reset();
         // EMU_printf("  - Undo: REDO Restore completed (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
     } else {
+        // Hidden UI option to browse/restore ALL undo states saved in SRAM regardless of undo stack state
+        crash_explore_redo_update();
         // EMU_printf("  - Undo: REDO None Found (count=%hu, slot=%hu, redo_sz=%hu)\n", (uint8_t)app_state.undo_count, (uint8_t)app_state.next_undo_slot, (uint8_t)app_state.redo_count);
     }
 }
 
+
+// Called to clear the threshold counter on the following conditions:
+// - Take undo snapshot (most drawing)
+// - Restore undo snapshot
+// - Restore (successful) redo snapshot
+static void crash_explore_redo_reset(void) {
+    crash_explore_redo_counter = CRASH_EXPLORE_REDO_COUNT_RESET;
+}
+
+
+// Called/updated when the user clicks the NOT-ENABLED Restore redo snapshot button.
+// N clicks in a row with NO OTHER undo actions will allow it to
+// start loading/browsing the raw undo stack in SRAM.
+static void crash_explore_redo_update(void) {
+
+    //EMU_printf("  CRASH EXPLORE REDO HANDLER (count=%hu, slot=%hu)\n", (uint8_t)crash_explore_redo_counter, (uint8_t)crash_explore_undo_slot);
+    if (crash_explore_redo_counter > CRASH_EXPLORE_REDO_COUNT_THRESHOLD) {
+        // EMU_printf("RESTORING\n");
+        // Load a undo slot then increment to the next (wrapping if at end)
+        uint8_t sram_bank, sram_slot;
+        CALC_SRAM_BANK_AND_SLOT(crash_explore_undo_slot, sram_bank, sram_slot);
+        drawing_restore_from_sram(sram_bank, sram_slot);
+
+        crash_explore_undo_slot++;
+        if (crash_explore_undo_slot > DRAW_UNDO_SLOT_MAX)
+            crash_explore_undo_slot = DRAW_UNDO_SLOT_MIN;
+    }
+    else {
+        // if ((app_state.redo_count == 0) && (app_state.redo_count == 0))
+        crash_explore_redo_counter++;
+    }
+}

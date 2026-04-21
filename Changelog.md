@@ -3,6 +3,7 @@
 
 ## Version 0.96
 - Added Undo/Redo hotkey as SELECT + B/A
+- Added Pressing Redo button 20+ times in a row to browse/recover undo snapshots after a crash
 
 ## Version 0.95
 - Added Mouse support with Inside Gadgets USB to link adapter (Game Boy, emulated in MiSTer)
