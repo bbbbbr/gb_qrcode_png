@@ -37,8 +37,9 @@ Button Controls:
   - Hold Down: Move faster in draw area
 - `SELECT + UP/DOWN`: Adjust Cursor Speed
 - `SELECT + LEFT/RIGHT`: Adjust Drawing Width
-- `SELECT + B/A`: Undo / Redo
+- `SELECT + B/A`: Step through Undo / Redo
 - `START`: Create QRCode
+- Pressing Redo button (or hotkey) 20+ times in a row browses/recovers undo snapshots after a crash
 
 The cursor movement has a small amount of inertia while in the drawing areas.
 It will apply as long as some button is being held down, and resets to zero
